@@ -2,48 +2,48 @@
 <html lang="it">
 <head>
 <meta charset="UTF-8">
-<title>Remondo Softair</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>REMONDO SIX 2.1 FC</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <link rel="stylesheet" href="style.css">
-<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css">
 </head>
 <body>
 
-<h1>REMONDO SOFTAIR</h1>
+<h1>🎯 REMONDO SIX 2.1 FC</h1>
 
-<div id="login">
-  <input id="name" placeholder="Nome operatore">
-  <select id="team">
-    <option value="RED">ROSSI</option>
-    <option value="BLUE">BLU</option>
-  </select>
-  <input id="masterpass" placeholder="Password Master (opzionale)">
-  <button onclick="login()">ENTRA</button>
+<div id="menu">
+    <label>Nome operatore:</label>
+    <input type="text" id="playerName" placeholder="Es. Fulvio">
+
+    <label>Seleziona squadra:</label>
+    <select id="teamSelect">
+        <option value="ALFA">TEAM ALFA</option>
+        <option value="BRAVO">TEAM BRAVO</option>
+    </select>
+
+    <label>Password Master (solo se sei Master):</label>
+    <input type="password" id="masterPwd" placeholder="Password Master">
+
+    <label>Durata partita (minuti, solo Master):</label>
+    <input type="number" id="gameDuration" value="2" min="1" max="60">
+
+    <button onclick="startGame()">Entra / Avvia Partita</button>
+    <button onclick="stopGame()">Fine Partita (Master)</button>
+    <button onclick="resetPlayer()">Reset Player</button>
 </div>
 
-<div id="masterPanel" class="hidden">
-  <h2>Pannello MASTER</h2>
-  <input type="number" id="matchTime" placeholder="Durata partita (minuti)">
-  <button onclick="startMatch()">AVVIA PARTITA</button>
-  <button onclick="stopMatch()">FINE PARTITA</button>
-  <button onclick="resetAll()">RESET TOTALE</button>
-</div>
+<div id="timer">⏱️ In attesa</div>
+<div id="status">GPS non attivo</div>
 
-<div id="info" class="hidden">
-  <h3 id="status">In attesa...</h3>
-  <h2 id="timer">00:00</h2>
-  <div id="score">🔴 <span id="redScore">0</span> | 🔵 <span id="blueScore">0</span></div>
-</div>
+<div id="map"></div>
 
-<div id="map" class="hidden"></div>
-
-<h3>Operatori Online</h3>
-<ul id="players"></ul>
-
-<h3>Obiettivi</h3>
+<h2>🏆 Tabellone Obiettivi</h2>
 <ul id="scoreboard"></ul>
 
-<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<h2>👥 Operatori Online</h2>
+<ul id="operators"></ul>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="script.js"></script>
 </body>
 </html>
