@@ -18,24 +18,26 @@
     <option value="RED">🔴 ROSSI</option>
     <option value="BLUE">🔵 BLU</option>
   </select>
-  <input id="masterpass" placeholder="Password master (opzionale)">
+  <input id="masterpass" placeholder="Password master">
   <button onclick="joinGame()">ENTRA IN PARTITA</button>
 </div>
 
 <div id="masterPanel" class="hidden">
   <h2>🎖 MASTER</h2>
-  <input type="number" id="matchTime" placeholder="Minuti partita">
+  <input id="matchTime" type="number" placeholder="Minuti">
+  <select id="mode">
+    <option value="CONQUEST">Conquista</option>
+    <option value="TOURNAMENT">Torneo</option>
+  </select>
   <button onclick="startMatch()">▶ AVVIA</button>
   <button onclick="stopMatch()">⏹ FINE</button>
-  <button onclick="resetAll()">♻ RESET TOTALE</button>
+  <button onclick="resetAll()">♻ RESET</button>
 </div>
 
-<div id="statusBox">
-  <h3 id="matchStatus">In attesa</h3>
-  <h2 id="timer">00:00</h2>
-</div>
+<h2 id="status">In attesa</h2>
+<h1 id="timer">00:00</h1>
 
-<div id="scoreBox">
+<div id="score">
   🔴 <span id="redScore">0</span> |
   🔵 <span id="blueScore">0</span>
 </div>
