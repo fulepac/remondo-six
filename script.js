@@ -1,19 +1,29 @@
-/**************** CONFIG ****************/
+// ================================================
+// CONFIG JSONBIN.IO
 const BIN_ID = "696d4940ae596e708fe53514";
 const SECRET_KEY = "$2a$10$8flpC9MOhAbyRpJOlsFLWO.Mb/virkFhLrl9MIFwETKeSkmBYiE2e";
-const API = `https://api.jsonbin.io/v3/b/${BIN_ID}`;
-const MASTER_PASSWORD = "71325";
+const JSONBIN_URL = `https://api.jsonbin.io/v3/b/${BIN_ID}`;
 
-const CAPTURE_TIME = 180; // 3 minuti permanenza
-const CAPTURE_RADIUS = 8; // metri
+// ================================================
+// STATO GLOBALE
+let gameStarted = false;
+let isMaster = false;
+let gameTime = 0;
+let timerInterval = null;
+let playerName = "";
+let playerTeam = "";
+let playerMarker = null;
+const operators = [];
+let objectives = [];
 
-/**************** STATO ****************/
-let playerId = crypto.randomUUID();
-let playerName="", playerTeam="", isMaster=false;
-let map, playerMarker=null;
+// ================================================
+// MAPPA
+const map = L.map("map").setView([45.237763, 8.809708], 18);
+L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 19 }).addTo(map);
 
-/**************** OBIETTIVI ****************/
-const localObjectives = [
+// ================================================
+// OBIETTIVI PREDEFINITI
+const predefinedObjectives = [
   {name:"PF1", lat:45.238376, lon:8.810060},
   {name:"PF2", lat:45.237648, lon:8.810941},
   {name:"PF3", lat:45.238634, lon:8.808772},
@@ -21,161 +31,114 @@ const localObjectives = [
   {name:"PF5", lat:45.237995, lon:8.808303}
 ];
 
-/**************** ELEMENTI DOM ****************/
-const objectiveList = document.getElementById("objectiveList");
-const timerElem = document.getElementById("timer");
-const statusElem = document.getElementById("status");
-const redList = document.getElementById("redList");
-const blueList = document.getElementById("blueList");
-const masterPanel = document.getElementById("masterPanel");
-const playerNameInput = document.getElementById("playerName");
-const teamSelect = document.getElementById("teamSelect");
-const masterPass = document.getElementById("masterPass");
-const gameDuration = document.getElementById("gameDuration");
+predefinedObjectives.forEach(o => {
+    const obj = {...o, owner:null, operator:null, radius:6, marker:null};
+    obj.marker = L.circle([obj.lat,obj.lon],{
+        radius: obj.radius,
+        color: 'white',
+        fillOpacity:0.4
+    }).addTo(map).bindPopup(`${obj.name} - Libero`);
+    objectives.push(obj);
+});
 
-/**************** API ****************/
-async function getData(){
-  try{
-    const res = await fetch(API, { headers:{ "X-Master-Key":SECRET_KEY }});
-    return (await res.json()).record;
-  }catch{ return null; }
+updateScoreboard();
+
+// ================================================
+// TIMER DI PARTITA
+function startTimer() {
+    timerInterval = setInterval(() => {
+        if (gameTime <= 0) {
+            clearInterval(timerInterval);
+            document.getElementById("timer").innerText = "⛔ PARTITA TERMINATA";
+            gameStarted = false;
+            return;
+        }
+        gameTime--;
+        const m = Math.floor(gameTime / 60);
+        const s = gameTime % 60;
+        document.getElementById("timer").innerText = `⏱️ Tempo: ${m}:${s.toString().padStart(2,"0")}`;
+    }, 1000);
 }
 
-async function saveData(data){
-  await fetch(API,{
-    method:"PUT",
-    headers:{
-      "Content-Type":"application/json",
-      "X-Master-Key":SECRET_KEY
-    },
-    body:JSON.stringify(data)
-  });
+// ================================================
+// GESTIONE OPERATORI
+function addOperator() {
+    if(!operators.includes(playerName + (isMaster ? " 👑" : ""))) {
+        operators.push(playerName + (isMaster ? " 👑" : ""));
+    }
+    updateOperatorsUI();
 }
 
-/**************** JOIN ****************/
-async function joinGame(){
-  playerName = playerNameInput.value.trim();
-  playerTeam = teamSelect.value;
-  isMaster = masterPass.value===MASTER_PASSWORD;
-
-  if(!playerName) return alert("Inserisci nome");
-
-  let data = await getData();
-  if(!data){
-    data = { players:{}, match:{started:false}, objectives: localObjectives.map(o=>({ ...o, owner:null, captureTeam:null, captureStart:null })) };
-  }
-
-  data.players[playerId] = { name:playerName, team:playerTeam, lat:null, lon:null, online:true };
-  await saveData(data);
-
-  if(isMaster) masterPanel.classList.remove("hidden");
-
-  initMap();
-}
-
-/**************** MASTER ****************/
-async function startGame(){
-  const min = parseInt(gameDuration.value);
-  if(!min) return alert("Imposta durata partita!");
-  const data = await getData();
-  data.match = { started:true, startTime:Date.now(), duration:min*60 };
-  await saveData(data);
-}
-
-async function endGame(){
-  const data = await getData();
-  data.match.started = false;
-  await saveData(data);
-}
-
-async function resetAll(){
-  await saveData({
-    players:{}, match:{started:false}, objectives:localObjectives.map(o=>({ ...o, owner:null, captureTeam:null, captureStart:null }))
-  });
-  location.reload();
-}
-
-/**************** MAP ****************/
-function initMap(){
-  map = L.map("map").setView([45.2382,8.8095],17);
-  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png").addTo(map);
-
-  navigator.geolocation.watchPosition(pos=>{
-    const {latitude, longitude} = pos.coords;
-    if(!playerMarker){
-      playerMarker = L.marker([latitude,longitude]).addTo(map);
-    }else playerMarker.setLatLng([latitude,longitude]);
-
-    updatePosition(latitude,longitude);
-  });
-
-  setInterval(gameLoop,2000);
-}
-
-/**************** UPDATE POS ****************/
-async function updatePosition(lat,lon){
-  const data = await getData();
-  if(data.players[playerId]){
-    data.players[playerId].lat = lat;
-    data.players[playerId].lon = lon;
-    await saveData(data);
-  }
-}
-
-/**************** GAME LOOP ****************/
-async function gameLoop(){
-  const data = await getData();
-  if(!data || !data.match.started) {
-    statusElem.innerText="⏳ In attesa avvio master";
-    return;
-  }
-
-  // logica conquista
-  data.objectives.forEach(obj=>{
-    const present = Object.values(data.players).filter(p=>{
-      if(!p.lat) return false;
-      return distance(p.lat,p.lon,obj.lat,obj.lon)<CAPTURE_RADIUS;
+function updateOperatorsUI() {
+    const ul = document.getElementById("operators");
+    ul.innerHTML = "";
+    operators.forEach(op => {
+        const li = document.createElement("li");
+        li.innerText = op;
+        ul.appendChild(li);
     });
-    const teams = [...new Set(present.map(p=>p.team))];
-
-    if(present.length===0){ obj.captureTeam=null; obj.captureStart=null; return; }
-    if(teams.length>1) return;
-    const team = teams[0];
-    if(obj.owner===team){ obj.captureTeam=null; obj.captureStart=null; return; }
-    if(!obj.captureTeam){ obj.captureTeam=team; obj.captureStart=Date.now(); }
-    if(Date.now()-obj.captureStart>=CAPTURE_TIME*1000){ obj.owner=team; obj.captureTeam=null; obj.captureStart=null; }
-  });
-
-  await saveData(data);
-  updateUI(data);
 }
 
-/**************** UI ****************/
-function updateUI(data){
-  // timer
-  if(data.match.started){
-    const r = data.match.duration-Math.floor((Date.now()-data.match.startTime)/1000);
-    timerElem.innerText = `${Math.floor(r/60)}:${(r%60).toString().padStart(2,"0")}`;
-    statusElem.innerText="🔥 PARTITA IN CORSO";
-  }else statusElem.innerText="⏳ In attesa avvio master";
-
-  // obiettivi
-  objectiveList.innerHTML="";
-  data.objectives.forEach(o=>{
-    const li=document.createElement("li");
-    li.textContent=`${o.name} - ${o.owner||"LIBERO"}`;
-    objectiveList.appendChild(li);
-  });
-
-  // operatori
-  redList.innerHTML="";
-  blueList.innerHTML="";
-  Object.values(data.players).forEach(p=>{
-    const li=document.createElement("li");
-    li.textContent=p.name;
-    (p.team==="RED"?redList:blueList).appendChild(li);
-  });
+// ================================================
+// GESTIONE OBIETTIVI
+function updateScoreboard(){
+    const sb = document.getElementById("scoreboard");
+    sb.innerHTML = "";
+    objectives.forEach(o=>{
+        const li = document.createElement("li");
+        li.innerText = o.owner ? `${o.name} - Team ${o.owner} - ${o.operator}` : `${o.name} - Libero`;
+        sb.appendChild(li);
+    });
 }
 
-/**************** UTIL ****************/
-function distance(a,b,c,d){ return Math.sqrt((a-c)**2+(b-d)**2)*111139; }
+// ================================================
+// AVVIO PARTITA
+function startGame(){
+    playerName = document.getElementById("playerName").value.trim();
+    playerTeam = document.getElementById("teamSelect").value;
+    isMaster = document.getElementById("isMaster").checked;
+
+    if(!playerName){ alert("Inserisci nome"); return; }
+
+    if(isMaster){
+        const min = parseInt(document.getElementById("gameDuration").value);
+        if(!min){ alert("Il master deve impostare il tempo"); return; }
+        gameTime = min*60;
+        startTimer();
+    }
+
+    gameStarted = true;
+    lockInputs();
+    addOperator();
+}
+
+function stopGame(){
+    if(!isMaster) return alert("Solo il Master può fermare la partita!");
+    clearInterval(timerInterval);
+    gameStarted = false;
+    document.getElementById("timer").innerText = "⛔ PARTITA TERMINATA";
+}
+
+function lockInputs(){
+    document.getElementById("playerName").disabled=true;
+    document.getElementById("teamSelect").disabled=true;
+    document.getElementById("gameDuration").disabled=true;
+    document.getElementById("isMaster").disabled=true;
+}
+
+function resetPlayer(){ location.reload(); }
+
+// ================================================
+// GPS
+navigator.geolocation.watchPosition(
+    pos=>{
+        const lat = pos.coords.latitude;
+        const lon = pos.coords.longitude;
+        document.getElementById("status").innerText = `📍 GPS attivo ${lat.toFixed(5)}, ${lon.toFixed(5)}`;
+        if(!playerMarker){ playerMarker = L.marker([lat,lon]).addTo(map); }
+        else{ playerMarker.setLatLng([lat,lon]); }
+    },
+    ()=>{document.getElementById("status").innerText="❌ GPS non disponibile";},
+    {enableHighAccuracy:true}
+);
+
