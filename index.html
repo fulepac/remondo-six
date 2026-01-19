@@ -12,27 +12,27 @@
 <h1>🎯 REMONDO SIX 2.1 FC</h1>
 
 <div id="menu">
-    <label>Nome operatore:</label>
-    <input type="text" id="playerName" placeholder="Es. Fulvio">
+  <label>Nome operatore:</label>
+  <input type="text" id="playerName" placeholder="Es. Fulvio" value="">
 
-    <label>Seleziona squadra:</label>
-    <select id="teamSelect">
-        <option value="ALFA">TEAM ALFA</option>
-        <option value="BRAVO">TEAM BRAVO</option>
-    </select>
+  <label>Seleziona squadra:</label>
+  <select id="teamSelect">
+    <option value="1">TEAM ALFA</option>
+    <option value="2">TEAM BRAVO</option>
+  </select>
 
-    <label>Password Master (solo se sei Master):</label>
-    <input type="password" id="masterPwd" placeholder="Password Master">
+  <label>Password Master (solo Master):</label>
+  <input type="password" id="masterPassword" placeholder="Solo Master">
 
-    <label>Durata partita (minuti, solo Master):</label>
-    <input type="number" id="gameDuration" value="2" min="1" max="60">
+  <label>Durata partita (minuti, solo Master):</label>
+  <input type="number" id="gameDuration" min="1" max="60">
 
-    <button onclick="startGame()">Entra / Avvia Partita</button>
-    <button onclick="stopGame()">Fine Partita (Master)</button>
-    <button onclick="resetPlayer()">Reset Player</button>
+  <button onclick="startGame()">Entra / Avvia Partita</button>
+  <button onclick="stopGame()">Fine Partita (Master)</button>
+  <button onclick="resetPlayer()">Reset Player</button>
 </div>
 
-<div id="timer">⏱️ In attesa</div>
+<div id="timer">⏱️ In attesa…</div>
 <div id="status">GPS non attivo</div>
 
 <div id="map"></div>
@@ -40,7 +40,7 @@
 <h2>🏆 Tabellone Obiettivi</h2>
 <ul id="scoreboard"></ul>
 
-<h2>👥 Operatori Online</h2>
+<h2>👤 Operatori Online</h2>
 <ul id="operators"></ul>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
