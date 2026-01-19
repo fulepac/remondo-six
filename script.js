@@ -1,3 +1,8 @@
+// ================= CONFIG JSONBIN.IO =================
+const BIN_ID = "696d4940ae596e708fe53514";
+const SECRET_KEY = "$2a$10$8flpC9MOhAbyRpJOlsFLWO.Mb/virkFhLrl9MIFwETKeSkmBYiE2e";
+const JSONBIN_URL = `https://api.jsonbin.io/v3/b/${BIN_ID}`;
+
 // ================= STATO GLOBALE ================= 
 let gameStarted = false;
 let isMaster = false;
@@ -8,13 +13,8 @@ let playerName = "";
 let playerTeam = "";
 let playerMarker = null;
 
-const operators = [];
-let operatorsData = {}; // oggetti con posizioni e team
-
-// ================= JSONBIN.IO =================
-const BIN_ID = "696d4940ae596e708fe53514";
-const SECRET_KEY = "$2a$10$8flpC9MOhAbyRpJOlsFLWO.Mb/virkFhLrl9MIFwETKeSkmBYiE2e";
-const JSONBIN_URL = `https://api.jsonbin.io/v3/b/${BIN_ID}`;
+let operators = []; // lista operatori locali
+let globalState = null; // stato globale sincronizzato con JSONBin
 
 // ================= MAPPA =================
 const map = L.map("map").setView([45.237763, 8.809708], 18);
@@ -41,184 +41,158 @@ objectives.forEach(obj => {
 updateScoreboard();
 
 // ================= FUNZIONI JSONBIN =================
-async function fetchGameData() {
+async function fetchState() {
   try {
     const res = await fetch(JSONBIN_URL + "/latest", {
       headers: { "X-Master-Key": SECRET_KEY }
     });
     const data = await res.json();
-    const record = data.record;
-
-    // aggiorna operatori
-    if(record.operators) {
-      operators.length = 0;
-      Object.keys(record.operators).forEach(name => {
-        if(!operators.includes(name)) operators.push(name);
-        operatorsData[name] = record.operators[name];
-      });
-    }
-
-    // aggiorna marker operatori sulla mappa
-    Object.values(operatorsData).forEach(op => {
-      if(!op.marker) {
-        op.marker = L.marker([op.lat, op.lon]).addTo(map).bindPopup(`${op.name} - ${op.team}`);
-      } else {
-        op.marker.setLatLng([op.lat, op.lon]);
-      }
-    });
-
-    // aggiorna obiettivi
-    if(record.objectives) {
-      record.objectives.forEach((obj, idx) => {
-        objectives[idx].owner = obj.owner;
-        objectives[idx].operator = obj.operator;
-        objectives[idx].marker.setStyle({color: obj.owner ? "red" : "white"});
-        objectives[idx].marker.bindPopup(`${obj.name} - ${obj.owner ? obj.operator : "Libero"}`);
-      });
-    }
-
-    updateScoreboard();
+    globalState = data.record;
+    // sincronizza locale
+    if (globalState.timer) gameTime = globalState.timer;
+    if (globalState.operators) operators = globalState.operators;
     updateOperatorsList();
-
-  } catch(e) { console.log("Errore fetch:", e); }
+    updateScoreboard();
+  } catch(e){ console.log("Fetch error:", e);}
 }
 
-async function updateGameData() {
+async function saveState() {
+  if (!globalState) return;
+  globalState.timer = gameTime;
+  globalState.operators = operators;
+  globalState.objectives = objectives.map(o => ({
+    name:o.name, owner:o.owner, operator:o.operator
+  }));
   try {
-    const body = JSON.stringify({
-      operators: operatorsData,
-      objectives: objectives.map(o => ({name:o.name, owner:o.owner, operator:o.operator}))
-    });
     await fetch(JSONBIN_URL, {
-      method: 'PUT',
+      method: "PUT",
       headers: {
-        "X-Master-Key": SECRET_KEY,
-        "Content-Type": "application/json"
+        "Content-Type": "application/json",
+        "X-Master-Key": SECRET_KEY
       },
-      body
+      body: JSON.stringify(globalState)
     });
-  } catch(e) { console.log("Errore update:", e); }
+  } catch(e){ console.log("Save error:", e);}
 }
 
-// ================= START / JOIN GAME =================
-function startGame() {
+// ================= START GAME =================
+async function startGame() {
   playerName = document.getElementById("playerName").value.trim();
   playerTeam = document.getElementById("teamSelect").value;
   isMaster = document.getElementById("isMaster").checked;
 
-  if(!playerName) { alert("Inserisci nome"); return; }
-
-  if(isMaster) {
+  if (!playerName) { alert("Inserisci nome"); return; }
+  if (isMaster) {
     const min = parseInt(document.getElementById("gameDuration").value);
-    if(!min) { alert("Il master deve impostare il tempo"); return; }
-    gameTime = min * 60;
-    startTimer();
-  }
+    if (!min) { alert("Il master deve impostare il tempo"); return; }
+    gameTime = min*60;
+    gameStarted = true;
 
-  gameStarted = true;
-  lockInputs();
-  addOperator();
-  updateGameData();
+    globalState = {
+      timer: gameTime,
+      operators: [],
+      objectives: objectives.map(o => ({name:o.name, owner:null, operator:null}))
+    };
+
+    startTimer();
+    await saveState();
+  }
+  joinGame();
 }
 
-function joinGame() {
-  playerName = document.getElementById("playerName").value.trim();
-  playerTeam = document.getElementById("teamSelect").value;
-
-  if(!playerName) { alert("Inserisci il nome"); return; }
-
+// ================= JOIN GAME =================
+async function joinGame() {
+  if (!playerName) { alert("Inserisci nome"); return; }
   gameStarted = true;
   lockInputs();
-  addOperator();
-  updateGameData();
+
+  // aggiunge operatore locale
+  const opEntry = {name:playerName, team:playerTeam, isMaster:isMaster};
+  if (!operators.find(o => o.name===playerName)) operators.push(opEntry);
+  await fetchState(); 
+  await saveState();
 }
 
 // ================= TIMER =================
 function startTimer() {
-  timerInterval = setInterval(() => {
-    if(gameTime <= 0) {
+  if (timerInterval) clearInterval(timerInterval);
+  timerInterval = setInterval(async ()=>{
+    if (!gameStarted) return;
+    if (gameTime<=0) {
       clearInterval(timerInterval);
-      document.getElementById("timer").innerText = "⛔ PARTITA TERMINATA";
-      gameStarted = false;
+      document.getElementById("timer").innerText="⛔ PARTITA TERMINATA";
+      gameStarted=false;
       return;
     }
     gameTime--;
     const m = Math.floor(gameTime/60);
-    const s = gameTime % 60;
-    document.getElementById("timer").innerText = `⏱️ Tempo: ${m}:${s.toString().padStart(2,"0")}`;
-  }, 1000);
+    const s = gameTime%60;
+    document.getElementById("timer").innerText=`⏱️ Tempo: ${m}:${s.toString().padStart(2,"0")}`;
+    await saveState();
+  },1000);
 }
 
 // ================= FERMA PARTITA (Master) =================
-function stopGame() {
-  if(!isMaster) { alert("Solo il Master può fermare la partita!"); return; }
-  gameStarted = false;
+async function stopGame() {
+  if (!isMaster) { alert("Solo il Master può fermare la partita"); return; }
+  gameStarted=false;
   clearInterval(timerInterval);
-  document.getElementById("timer").innerText = "⛔ PARTITA TERMINATA";
-  updateGameData();
+  document.getElementById("timer").innerText="⛔ PARTITA TERMINATA";
+  await saveState();
+}
+
+// ================= RESET COMPLETO (Master) =================
+async function resetGame() {
+  if (!isMaster) { alert("Solo il Master può resettare la partita"); return; }
+  gameStarted=false;
+  clearInterval(timerInterval);
+  gameTime=0;
+  operators=[];
+  objectives.forEach(o=>{o.owner=null;o.operator=null;});
+  document.getElementById("timer").innerText="⏱️ In attesa…";
+  await saveState();
+  updateOperatorsList();
+  updateScoreboard();
 }
 
 // ================= GPS =================
-navigator.geolocation.watchPosition(
-  pos => {
-    const lat = pos.coords.latitude;
-    const lon = pos.coords.longitude;
-    document.getElementById("status").innerText = `📍 GPS attivo ${lat.toFixed(5)}, ${lon.toFixed(5)}`;
-
-    if(!playerMarker) {
-      playerMarker = L.marker([lat, lon]).addTo(map);
-    } else {
-      playerMarker.setLatLng([lat, lon]);
-    }
-
-    // aggiorna posizione e salva
-    operatorsData[playerName] = {name: playerName, team: playerTeam, lat, lon};
-    updateGameData();
-  },
-  () => { document.getElementById("status").innerText = "❌ GPS non disponibile"; },
-  {enableHighAccuracy:true}
-);
+navigator.geolocation.watchPosition(pos=>{
+  const lat=pos.coords.latitude;
+  const lon=pos.coords.longitude;
+  document.getElementById("status").innerText=`📍 GPS attivo ${lat.toFixed(5)}, ${lon.toFixed(5)}`;
+  if (!playerMarker) { playerMarker=L.marker([lat,lon]).addTo(map); }
+  else { playerMarker.setLatLng([lat,lon]); }
+},()=>{ document.getElementById("status").innerText="❌ GPS non disponibile"; },{ enableHighAccuracy:true });
 
 // ================= UI =================
 function updateScoreboard() {
-  const sb = document.getElementById("scoreboard");
-  sb.innerHTML = "";
-  objectives.forEach(o => {
-    const li = document.createElement("li");
-    li.innerText = o.owner ? `${o.name} - Team ${o.owner} (${o.operator})` : `${o.name} - Libero`;
+  const sb=document.getElementById("scoreboard");
+  sb.innerHTML="";
+  objectives.forEach(o=>{
+    const li=document.createElement("li");
+    li.innerText=o.owner?`${o.name} - ${o.operator} (${o.owner})`:`${o.name} - Libero`;
     sb.appendChild(li);
   });
 }
 
 function updateOperatorsList() {
-  const ul = document.getElementById("operators");
-  ul.innerHTML = "";
-  operators.forEach(op => {
-    const li = document.createElement("li");
-    li.innerText = op;
+  const ul=document.getElementById("operators");
+  ul.innerHTML="";
+  operators.forEach(op=>{
+    const li=document.createElement("li");
+    li.innerText=op.name + " - " + op.team + (op.isMaster?" 👑":"");
     ul.appendChild(li);
   });
 }
 
-function addOperator() {
-  if(!operators.includes(playerName)) {
-    operators.push(playerName + (isMaster ? " 👑" : ""));
-  }
-  updateOperatorsList();
-}
-
 function lockInputs() {
-  document.getElementById("playerName").disabled = true;
-  document.getElementById("teamSelect").disabled = true;
-  document.getElementById("gameDuration").disabled = true;
-  document.getElementById("isMaster").disabled = true;
+  document.getElementById("playerName").disabled=true;
+  document.getElementById("teamSelect").disabled=true;
+  document.getElementById("gameDuration").disabled=true;
+  document.getElementById("isMaster").disabled=true;
 }
 
-function resetPlayer() {
-  location.reload();
-}
+function resetPlayer() { location.reload(); }
 
-// ================= AGGIORNA OGNI 1.5 SECONDI =================
-setInterval(() => {
-  if(gameStarted) fetchGameData();
-}, 1500);
+// ================= SINCRONIZZAZIONE PERIODICA =================
+setInterval(fetchState, 3000); // ogni 3 secondi aggiorna stato globale
