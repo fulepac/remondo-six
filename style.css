@@ -6,17 +6,15 @@ body {
   text-align:center;
 }
 
-h1,h2,h3,h4 { margin:5px; }
+h1,h2,h3 { margin:5px; }
 
-#menu, #masterPanel {
+#menu {
   margin:10px;
 }
 
-.hidden { display:none; }
-
 #map {
-  width: 100%;
-  height: 400px;
+  width:100%;
+  height:400px;
   margin:10px 0;
   border:2px solid #555;
 }
@@ -24,4 +22,4 @@ h1,h2,h3,h4 { margin:5px; }
 ul { list-style:none; padding:0; }
 li { margin:2px 0; }
 
-#score { font-size:1.2em; margin:10px; }
+input, select, button { margin:5px; padding:5px; }
