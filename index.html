@@ -2,45 +2,43 @@
 <html lang="it">
 <head>
 <meta charset="UTF-8">
-<title>Remondo Softair Online</title>
+<title>Remondo Softair</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="stylesheet" href="style.css">
 <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css">
 </head>
 <body>
 
-<h1>REMONDO SOFTAIR ONLINE</h1>
+<h1>REMONDO SOFTAIR</h1>
 
 <div id="login">
-  <input id="playerName" placeholder="Nome operatore">
-  <select id="teamSelect">
-    <option value="ROSSI">ROSSI</option>
-    <option value="BLU">BLU</option>
+  <input id="name" placeholder="Nome operatore">
+  <select id="team">
+    <option value="RED">ROSSI</option>
+    <option value="BLUE">BLU</option>
   </select>
-  <input id="masterPass" placeholder="Password Master (opzionale)">
-  <button onclick="joinGame()">ENTRA</button>
+  <input id="masterpass" placeholder="Password Master (opzionale)">
+  <button onclick="login()">ENTRA</button>
 </div>
 
 <div id="masterPanel" class="hidden">
-  <h2>MASTER PANEL</h2>
-  <input type="number" id="gameDuration" placeholder="Durata partita (minuti)">
-  <button onclick="startGame()">AVVIA PARTITA</button>
-  <button onclick="stopGame()">FINE PARTITA</button>
+  <h2>Pannello MASTER</h2>
+  <input type="number" id="matchTime" placeholder="Durata partita (minuti)">
+  <button onclick="startMatch()">AVVIA PARTITA</button>
+  <button onclick="stopMatch()">FINE PARTITA</button>
   <button onclick="resetAll()">RESET TOTALE</button>
 </div>
 
-<div id="statusPanel">
-  <h3 id="status">In attesa</h3>
-  <h2 id="timer">⏱️ 00:00</h2>
-  <div id="scoreBoard">
-    🔴 <span id="redPoints">0</span> | 🔵 <span id="bluePoints">0</span>
-  </div>
+<div id="info" class="hidden">
+  <h3 id="status">In attesa...</h3>
+  <h2 id="timer">00:00</h2>
+  <div id="score">🔴 <span id="redScore">0</span> | 🔵 <span id="blueScore">0</span></div>
 </div>
 
-<div id="map"></div>
+<div id="map" class="hidden"></div>
 
 <h3>Operatori Online</h3>
-<ul id="operatorsList"></ul>
+<ul id="players"></ul>
 
 <h3>Obiettivi</h3>
 <ul id="scoreboard"></ul>
