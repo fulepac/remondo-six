@@ -16,8 +16,6 @@ let playerMarker = null;
 
 const operators = [];
 let objectives = [];
-
-// Punti squadre
 let points = {ROSSI:0, BLU:0};
 
 // ================================================
@@ -35,7 +33,6 @@ const predefinedObjectives = [
   {name:"PF5", lat:45.237995, lon:8.808303}
 ];
 
-// inizializzazione obiettivi
 predefinedObjectives.forEach(o=>{
     const obj = {...o, owner:null, operator:null, radius:6, marker:null};
     obj.marker = L.circle([obj.lat,o.lon],{
@@ -78,6 +75,7 @@ function startGame(){
     gameStarted = true;
     lockInputs();
     startTimer();
+    document.getElementById("status").innerText="Partita iniziata dal Master!";
 }
 
 function stopGame(){
@@ -85,6 +83,7 @@ function stopGame(){
     clearInterval(timerInterval);
     gameStarted = false;
     document.getElementById("timer").innerText="⛔ PARTITA TERMINATA";
+    document.getElementById("status").innerText="Partita fermata dal Master!";
 }
 
 function resetAll(){
@@ -103,7 +102,13 @@ function lockInputs(){
 // TIMER
 function startTimer(){
     timerInterval=setInterval(()=>{
-        if(gameTime<=0){ clearInterval(timerInterval); gameStarted=false; document.getElementById("timer").innerText="⛔ PARTITA TERMINATA"; return; }
+        if(gameTime<=0){ 
+            clearInterval(timerInterval); 
+            gameStarted=false; 
+            document.getElementById("timer").innerText="⛔ PARTITA TERMINATA"; 
+            document.getElementById("status").innerText="Partita terminata"; 
+            return; 
+        }
         gameTime--;
         const m = Math.floor(gameTime/60);
         const s = gameTime%60;
