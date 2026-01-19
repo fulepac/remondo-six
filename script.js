@@ -1,11 +1,9 @@
-// ================================================
-// CONFIG JSONBIN.IO
+// ================= CONFIG JSONBIN.IO =================
 const BIN_ID = "696d4940ae596e708fe53514";
 const SECRET_KEY = "$2a$10$8flpC9MOhAbyRpJOlsFLWO.Mb/virkFhLrl9MIFwETKeSkmBYiE2e";
 const JSONBIN_URL = `https://api.jsonbin.io/v3/b/${BIN_ID}`;
 
-// ================================================
-// STATO GLOBALE
+// ================= STATO GLOBALE =================
 let gameStarted = false;
 let isMaster = false;
 let gameTime = 0;
@@ -13,18 +11,14 @@ let timerInterval = null;
 let playerName = "";
 let playerTeam = "";
 let playerMarker = null;
-
-const operators = [];
+let operators = [];
 let objectives = [];
-let points = {ROSSI:0, BLU:0};
 
-// ================================================
-// MAPPA
+// ================= MAPPA =================
 const map = L.map("map").setView([45.237763, 8.809708], 18);
-L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:19}).addTo(map);
+L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{ maxZoom: 19 }).addTo(map);
 
-// ================================================
-// OBIETTIVI PREDEFINITI
+// ================= OBIETTIVI =================
 const predefinedObjectives = [
   {name:"PF1", lat:45.238376, lon:8.810060},
   {name:"PF2", lat:45.237648, lon:8.810941},
@@ -34,128 +28,115 @@ const predefinedObjectives = [
 ];
 
 predefinedObjectives.forEach(o=>{
-    const obj = {...o, owner:null, operator:null, radius:6, marker:null};
-    obj.marker = L.circle([obj.lat,o.lon],{
-        radius: obj.radius,
-        color:'white',
-        fillOpacity:0.4
-    }).addTo(map).bindPopup(`${obj.name} - Libero`);
-    objectives.push(obj);
+  const obj = {...o, owner:null, operator:null, radius:6, marker:null};
+  obj.marker = L.circle([obj.lat,o.lon],{
+      radius: obj.radius,
+      color:'white',
+      fillOpacity:0.4
+  }).addTo(map).bindPopup(`${obj.name} - Libero`);
+  objectives.push(obj);
 });
 
 updateScoreboard();
-updateOperatorsUI();
 
-// ================================================
-// FUNZIONI BASE
-function joinGame(){
-    playerName = document.getElementById("playerName").value.trim();
-    playerTeam = document.getElementById("teamSelect").value;
-    const pass = document.getElementById("masterPass").value;
+// ================= LOGIN =================
+function login(){
+  const name = document.getElementById("name").value.trim();
+  const team = document.getElementById("team").value;
+  const pass = document.getElementById("masterpass").value.trim();
 
-    if(!playerName){ alert("Inserisci nome"); return; }
+  if(!name){ alert("Inserisci il nome"); return; }
 
-    if(pass === "71325"){
-        isMaster = true;
-        document.getElementById("masterPanel").classList.remove("hidden");
-        alert("Accesso come Master");
-    }
+  isMaster = pass === "71325";
+  playerName = name;
+  playerTeam = team;
 
-    addOperator();
+  document.getElementById("login").classList.add("hidden");
+  document.getElementById("map").classList.remove("hidden");
+  document.getElementById("info").classList.remove("hidden");
+
+  if(isMaster){ document.getElementById("masterPanel").classList.remove("hidden"); }
+
+  addOperator();
+  fetchGameState();
 }
 
-// ================================================
-// MASTER
-function startGame(){
-    if(!isMaster){ alert("Solo il Master può avviare la partita!"); return; }
-    const duration = parseInt(document.getElementById("gameDuration").value);
-    if(!duration){ alert("Imposta durata partita"); return; }
+// ================= TIMER =================
+function startMatch(){
+  if(!isMaster) return alert("Solo il Master può avviare la partita!");
+  const min = parseInt(document.getElementById("matchTime").value);
+  if(!min){ alert("Inserisci la durata"); return; }
 
-    gameTime = duration*60;
-    gameStarted = true;
-    lockInputs();
-    startTimer();
-    document.getElementById("status").innerText="Partita iniziata dal Master!";
+  gameTime = min*60;
+  gameStarted = true;
+  startTimer();
 }
 
-function stopGame(){
-    if(!isMaster){ alert("Solo Master!"); return; }
-    clearInterval(timerInterval);
-    gameStarted = false;
-    document.getElementById("timer").innerText="⛔ PARTITA TERMINATA";
-    document.getElementById("status").innerText="Partita fermata dal Master!";
-}
-
-function resetAll(){
-    if(!isMaster){ alert("Solo Master!"); return; }
-    location.reload();
-}
-
-function lockInputs(){
-    document.getElementById("playerName").disabled=true;
-    document.getElementById("teamSelect").disabled=true;
-    document.getElementById("gameDuration").disabled=true;
-    document.getElementById("masterPass").disabled=true;
-}
-
-// ================================================
-// TIMER
 function startTimer(){
-    timerInterval=setInterval(()=>{
-        if(gameTime<=0){ 
-            clearInterval(timerInterval); 
-            gameStarted=false; 
-            document.getElementById("timer").innerText="⛔ PARTITA TERMINATA"; 
-            document.getElementById("status").innerText="Partita terminata"; 
-            return; 
-        }
-        gameTime--;
-        const m = Math.floor(gameTime/60);
-        const s = gameTime%60;
-        document.getElementById("timer").innerText=`⏱️ Tempo: ${m}:${s.toString().padStart(2,"0")}`;
-    },1000);
+  if(timerInterval) clearInterval(timerInterval);
+  timerInterval = setInterval(()=>{
+      if(gameTime<=0){ clearInterval(timerInterval); gameStarted=false; document.getElementById("timer").innerText="⛔ PARTITA TERMINATA"; return; }
+      gameTime--;
+      const m = Math.floor(gameTime/60);
+      const s = gameTime%60;
+      document.getElementById("timer").innerText=`⏱️ ${m}:${s.toString().padStart(2,"0")}`;
+  },1000);
 }
 
-// ================================================
-// OPERATORI
+function stopMatch(){
+  if(!isMaster) return alert("Solo il Master può fermare la partita!");
+  clearInterval(timerInterval);
+  gameStarted=false;
+  document.getElementById("timer").innerText="⛔ PARTITA TERMINATA";
+}
+
+// ================= OPERATORS =================
 function addOperator(){
-    const label = playerName + (isMaster?" 👑":"");
-    if(!operators.includes(label)) operators.push(label);
-    updateOperatorsUI();
+  const op = playerName + (isMaster ? " 👑" : "");
+  if(!operators.includes(op)) operators.push(op);
+  updateOperatorsUI();
 }
 
 function updateOperatorsUI(){
-    const ul = document.getElementById("operatorsList");
-    ul.innerHTML="";
-    operators.forEach(op=>{
-        const li=document.createElement("li");
-        li.innerText=op;
-        ul.appendChild(li);
-    });
+  const ul = document.getElementById("players");
+  ul.innerHTML="";
+  operators.forEach(op=>{
+    const li=document.createElement("li");
+    li.innerText=op;
+    ul.appendChild(li);
+  });
 }
 
-// ================================================
-// OBIETTIVI
+// ================= SCOREBOARD =================
 function updateScoreboard(){
-    const sb = document.getElementById("scoreboard");
-    sb.innerHTML="";
-    objectives.forEach(o=>{
-        const li=document.createElement("li");
-        li.innerText = o.owner ? `${o.name} - Team ${o.owner} - ${o.operator}` : `${o.name} - Libero`;
-        sb.appendChild(li);
-    });
+  const sb = document.getElementById("scoreboard");
+  sb.innerHTML="";
+  objectives.forEach(o=>{
+    const li = document.createElement("li");
+    li.innerText=o.owner ? `${o.name} - ${o.owner} - ${o.operator}`:`${o.name} - Libero`;
+    sb.appendChild(li);
+  });
 }
 
-// ================================================
-// GPS
+// ================= GPS =================
 navigator.geolocation.watchPosition(
-    pos=>{
-        const lat = pos.coords.latitude;
-        const lon = pos.coords.longitude;
-        document.getElementById("status").innerText = `📍 GPS attivo ${lat.toFixed(5)}, ${lon.toFixed(5)}`;
-        if(!playerMarker){ playerMarker=L.marker([lat,lon]).addTo(map);}
-        else{playerMarker.setLatLng([lat,lon]);}
-    },
-    ()=>{document.getElementById("status").innerText="❌ GPS non disponibile";},
-    {enableHighAccuracy:true}
+  pos=>{
+    const lat=pos.coords.latitude;
+    const lon=pos.coords.longitude;
+    document.getElementById("status").innerText=`📍 GPS attivo ${lat.toFixed(5)}, ${lon.toFixed(5)}`;
+    if(!playerMarker){ playerMarker=L.marker([lat,lon]).addTo(map); }
+    else{ playerMarker.setLatLng([lat,lon]); }
+  },
+  ()=>{document.getElementById("status").innerText="❌ GPS non disponibile";},
+  {enableHighAccuracy:true}
 );
+
+// ================= RESET =================
+function resetAll(){ if(!isMaster) return alert("Solo Master"); location.reload(); }
+
+// ================= FETCH GAME STATE ONLINE =================
+function fetchGameState(){
+  // Qui puoi implementare la logica per leggere da JSONBin in loop
+  // e aggiornare operators, gameTime, obiettivi in tempo reale
+  // (fetch + setInterval 5s)
+}
