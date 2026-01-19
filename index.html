@@ -11,49 +11,41 @@
 
 <h1>REMONDO SOFTAIR</h1>
 
-<!-- LOGIN SEMPRE VISIBILE -->
-<div id="login">
+<div id="menu">
   <input id="playerName" placeholder="Nome operatore">
   <select id="teamSelect">
-    <option value="RED">🔴 Rossi</option>
-    <option value="BLUE">🔵 Blu</option>
+    <option value="RED">ROSSI</option>
+    <option value="BLUE">BLU</option>
   </select>
-  <input id="masterPass" placeholder="Password master">
-  <button onclick="joinGame()">ENTRA IN PARTITA</button>
+  <input id="masterPass" placeholder="Password master (opzionale)">
+  <input id="gameDuration" type="number" placeholder="Durata partita (minuti)">
+  <button onclick="joinGame()">ENTRA / JOIN</button>
 </div>
 
-<!-- MASTER MENU -->
 <div id="masterPanel" class="hidden">
-  <h2>🎖 CONTROLLO MASTER</h2>
-
-  <label>Durata partita (min)</label>
-  <input id="gameDuration" type="number" value="30">
-
-  <label>Tempo conquista OBJ (sec)</label>
-  <input id="captureTime" type="number" value="20">
-
-  <button onclick="startGame()">▶ AVVIA PARTITA</button>
-  <button onclick="endGame()">⏹ FINE PARTITA</button>
-  <button onclick="resetGame()">♻ RESET TOTALE</button>
+  <button onclick="startGame()">AVVIA PARTITA</button>
+  <button onclick="endGame()">FINE PARTITA</button>
+  <button onclick="resetAll()">RESET COMPLETO</button>
 </div>
 
-<h2 id="status">⏳ In attesa avvio</h2>
-<h1 id="timer">--:--</h1>
+<h3 id="status">⏳ In attesa</h3>
+<h2 id="timer">00:00</h2>
 
-<h2>🎯 OBIETTIVI</h2>
-<ul id="objectiveList"></ul>
+<div id="score">
+  🔴 <span id="redScore">0</span> | 🔵 <span id="blueScore">0</span>
+</div>
 
 <div id="map"></div>
 
-<div class="teams">
-  <div>
-    <h3>🔴 Rossi</h3>
-    <ul id="redList"></ul>
-  </div>
-  <div>
-    <h3>🔵 Blu</h3>
-    <ul id="blueList"></ul>
-  </div>
+<h3>Obiettivi</h3>
+<ul id="objectiveList"></ul>
+
+<h3>Operatori Online</h3>
+<div id="operators">
+  <h4>ROSSI</h4>
+  <ul id="redList"></ul>
+  <h4>BLU</h4>
+  <ul id="blueList"></ul>
 </div>
 
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
