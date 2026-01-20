@@ -6,34 +6,41 @@ let state = { isMaster: false, playerName: "", playerTeam: "", playerMarker: nul
 let allyMarkers = {}; 
 let activeObjMarkers = [];
 
-// 10 SLOT: I primi 5 pre-compilati, gli altri 5 vuoti
-const INITIAL_SLOTS = [
-    {name:"PF1", lat:45.23837, lon:8.81006, active: true},
-    {name:"PF2", lat:45.23764, lon:8.81094, active: true},
-    {name:"PF3", lat:45.23863, lon:8.80877, active: true},
-    {name:"PF4", lat:45.23777, lon:8.80920, active: true},
-    {name:"PF5", lat:45.23799, lon:8.80830, active: true},
-    {name:"OBJ6", lat:0, lon:0, active: false},
-    {name:"OBJ7", lat:0, lon:0, active: false},
-    {name:"OBJ8", lat:0, lon:0, active: false},
-    {name:"OBJ9", lat:0, lon:0, active: false},
-    {name:"OBJ10", lat:0, lon:0, active: false}
+// COORDINATE STORICHE DEFINITE
+const DEFAULT_COORDS = [
+    {name:"PF1", lat:45.238376, lon:8.810060, active: true},
+    {name:"PF2", lat:45.237648, lon:8.810941, active: true},
+    {name:"PF3", lat:45.238634, lon:8.808772, active: true},
+    {name:"PF4", lat:45.237771, lon:8.809208, active: true},
+    {name:"PF5", lat:45.237995, lon:8.808303, active: true}
 ];
 
+// Inizializzazione dei 10 Slot
 function initSlotUI() {
     const container = document.getElementById("objSlotContainer");
-    INITIAL_SLOTS.forEach((s, i) => {
+    if (!container) return;
+    container.innerHTML = ""; // Pulisce prima di generare
+
+    for (let i = 0; i < 10; i++) {
+        // Se l'indice è < 5 usa i default, altrimenti slot vuoti
+        const data = DEFAULT_COORDS[i] || { name: `OBJ${i+1}`, lat: 0.0, lon: 0.0, active: false };
+        
         container.innerHTML += `
             <div class="obj-slot" id="slot-${i}">
                 <span>${i+1}</span>
-                <input type="checkbox" class="s-active" ${s.active?'checked':''}>
-                <input type="text" class="s-name" value="${s.name}">
-                <input type="number" class="s-lat" value="${s.lat}" step="0.00001">
-                <input type="number" class="s-lon" value="${s.lon}" step="0.00001">
+                <input type="checkbox" class="s-active" ${data.active ? 'checked' : ''}>
+                <input type="text" class="s-name" value="${data.name}" placeholder="Nome">
+                <input type="number" class="s-lat" value="${data.lat}" step="0.000001">
+                <input type="number" class="s-lon" value="${data.lon}" step="0.000001">
             </div>`;
-    });
+    }
 }
-initSlotUI();
+
+// Chiamata immediata all'avvio dello script
+window.onload = () => {
+    initSlotUI();
+    checkStatus();
+};
 
 const map = L.map("map").setView([45.237763, 8.809708], 18);
 L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png").addTo(map);
@@ -43,13 +50,17 @@ async function checkStatus() {
         const res = await fetch(`${JSONBIN_URL}/latest`, { headers: { "X-Master-Key": SECRET_KEY }, cache: 'no-store' });
         const { record } = await res.json();
         const b = document.getElementById("gameStatusBanner");
-        if (record.game?.started) { b.innerText="⚠️ PARTITA IN CORSO"; b.className="status-banner status-active"; }
-        else { b.innerText="✅ CAMPO DISPONIBILE"; b.className="status-banner status-waiting"; }
+        if (record.game?.started) { 
+            b.innerText="⚠️ PARTITA IN CORSO"; b.className="status-banner status-active"; 
+        } else { 
+            b.innerText="✅ CAMPO DISPONIBILE"; b.className="status-banner status-waiting"; 
+        }
     } catch(e){}
 }
-checkStatus();
 
-function toggleMasterTools() { document.getElementById("masterTools").style.display = document.getElementById("isMaster").checked ? "block" : "none"; }
+function toggleMasterTools() { 
+    document.getElementById("masterTools").style.display = document.getElementById("isMaster").checked ? "block" : "none"; 
+}
 
 function getDist(la1, lo1, la2, lo2) {
     const R = 6371e3;
@@ -64,15 +75,20 @@ async function startGame() {
     state.playerName = document.getElementById("playerName").value.trim().toUpperCase();
     state.playerTeam = document.getElementById("teamSelect").value;
     state.isMaster = document.getElementById("isMaster").checked;
-    if (!state.playerName) return alert("NOME?");
-    if (state.isMaster && document.getElementById("masterPass").value !== "71325") return alert("PASS?");
-    document.getElementById("menu").style.display="none"; document.getElementById("game-ui").style.display="block";
+    
+    if (!state.playerName) return alert("INSERISCI NOME OPERATORE");
+    if (state.isMaster && document.getElementById("masterPass").value !== "71325") return alert("PASSWORD MASTER ERRATA");
+
+    document.getElementById("menu").style.display="none"; 
+    document.getElementById("game-ui").style.display="block";
     if(state.isMaster) document.getElementById("master-controls").style.display="block";
+
     navigator.geolocation.watchPosition(p => {
         const {latitude:la, longitude:lo} = p.coords;
-        if(!state.playerMarker) state.playerMarker = L.marker([la,lo]).addTo(map).bindTooltip("TU");
+        if(!state.playerMarker) state.playerMarker = L.marker([la,lo]).addTo(map).bindTooltip("TU ("+state.playerName+")", {permanent:true});
         else state.playerMarker.setLatLng([la,lo]);
     }, null, {enableHighAccuracy:true});
+
     setInterval(sync, 4000);
 }
 
@@ -81,11 +97,22 @@ async function sync() {
     try {
         const res = await fetch(`${JSONBIN_URL}/latest`, { headers: {"X-Master-Key":SECRET_KEY}, cache:'no-store'});
         const { record } = await res.json();
+        
         if(!record.players) record.players = {};
-        record.players[state.playerName] = { team: state.playerTeam, lat: state.playerMarker.getLatLng().lat, lon: state.playerMarker.getLatLng().lng, last: Date.now() };
+        record.players[state.playerName] = { 
+            team: state.playerTeam, 
+            lat: state.playerMarker.getLatLng().lat, 
+            lon: state.playerMarker.getLatLng().lng, 
+            last: Date.now() 
+        };
+
         if(state.isMaster) {
             processLogic(record);
-            await fetch(JSONBIN_URL, { method:"PUT", headers:{"Content-Type":"application/json","X-Master-Key":SECRET_KEY}, body: JSON.stringify(record)});
+            await fetch(JSONBIN_URL, { 
+                method:"PUT", 
+                headers:{"Content-Type":"application/json","X-Master-Key":SECRET_KEY}, 
+                body: JSON.stringify(record)
+            });
         }
         updateUI(record);
     } catch(e){}
@@ -93,16 +120,18 @@ async function sync() {
 
 function processLogic(r) {
     if (!r.game.started) {
-        r.game.started = true; r.game.start = Date.now();
+        r.game.started = true; 
+        r.game.start = Date.now();
         r.game.duration = (parseInt(document.getElementById("gameDuration").value)||30)*60;
-        r.game.score = {RED:0, BLUE:0}; r.game.lastTick = Date.now();
+        r.game.score = {RED:0, BLUE:0}; 
+        r.game.lastTick = Date.now();
         
         let finalObjs = [];
         for(let i=0; i<10; i++){
             const row = document.getElementById(`slot-${i}`);
-            if(row.querySelector(".s-active").checked) {
+            if(row && row.querySelector(".s-active").checked) {
                 finalObjs.push({
-                    name: row.querySelector(".s-name").value.toUpperCase(),
+                    name: row.querySelector(".s-name").value.toUpperCase() || `OBJ${i+1}`,
                     lat: parseFloat(row.querySelector(".s-lat").value),
                     lon: parseFloat(row.querySelector(".s-lon").value)
                 });
@@ -110,6 +139,7 @@ function processLogic(r) {
         }
         r.objectives = finalObjs.map(o => ({...o, owner:"LIBERO", start:null, teamConquering:null}));
     }
+
     r.objectives.forEach(obj => {
         const nearby = Object.values(r.players).filter(p => (Date.now()-p.last < 10000) && getDist(obj.lat, obj.lon, p.lat, p.lon) < 15);
         const teams = [...new Set(nearby.map(p => p.team))];
@@ -120,6 +150,7 @@ function processLogic(r) {
             }
         } else { obj.teamConquering = null; obj.start = null; }
     });
+
     if(Date.now() - r.game.lastTick > 30000) {
         r.objectives.forEach(o => { if(o.owner!=="LIBERO") r.game.score[o.owner]++; });
         r.game.lastTick = Date.now();
@@ -131,8 +162,10 @@ function updateUI(r) {
     const rem = r.game.duration - Math.floor((Date.now()-r.game.start)/1000);
     document.getElementById("timer").innerText = rem>0 ? `⏱️ ${Math.floor(rem/60)}:${(rem%60).toString().padStart(2,"0")}` : "FINE";
     document.getElementById("score").innerHTML = `<span style="color:red">RED: ${r.game.score.RED}</span> | <span style="color:cyan">BLUE: ${r.game.score.BLUE}</span>`;
+    
     const sb = document.getElementById("scoreboard"); sb.innerHTML = "";
     activeObjMarkers.forEach(m => map.removeLayer(m)); activeObjMarkers = [];
+
     r.objectives.forEach(obj => {
         const col = obj.owner === "RED" ? "red" : obj.owner === "BLUE" ? "#00ffff" : "white";
         let status = obj.owner;
@@ -140,11 +173,14 @@ function updateUI(r) {
         sb.innerHTML += `<li style="border-left:5px solid ${col}">${obj.name}: ${status}</li>`;
         activeObjMarkers.push(L.circle([obj.lat, obj.lon], {radius:12, color:col, fillOpacity:0.3}).addTo(map));
     });
+
     const opList = document.getElementById("operators"); opList.innerHTML = "";
     const rad = document.getElementById("radar"); rad.querySelectorAll(".dot").forEach(d => d.remove());
     const myPos = state.playerMarker.getLatLng();
+
     Object.entries(r.players).forEach(([name, p]) => {
         if(Date.now()-p.last > 20000) { if(allyMarkers[name]) {map.removeLayer(allyMarkers[name]); delete allyMarkers[name];} return; }
+        
         if(p.team === state.playerTeam) {
             opList.innerHTML += `<li><span style="color:${p.team==='RED'?'red':'#00ffff'}">●</span> ${name}</li>`;
             if(name !== state.playerName) {
@@ -152,15 +188,22 @@ function updateUI(r) {
                 else allyMarkers[name].setLatLng([p.lat, p.lon]);
             }
         }
+
         if(name !== state.playerName) {
             const d = getDist(myPos.lat, myPos.lng, p.lat, p.lon);
             if(d < 100) {
                 const dot = document.createElement("div"); dot.className = "dot "+p.team;
-                dot.style.left = (70 + (p.lon-myPos.lng)*40000)+"px"; dot.style.top = (70 - (p.lat-myPos.lat)*40000)+"px";
+                dot.style.left = (70 + (p.lon-myPos.lng)*40000)+"px"; 
+                dot.style.top = (70 - (p.lat-myPos.lat)*40000)+"px";
                 rad.appendChild(dot);
             }
         }
     });
 }
 
-async function resetBin() { if(confirm("RESET?")) {
+async function resetBin() { 
+    if(confirm("RESET TOTALE?")) { 
+        await fetch(JSONBIN_URL, {method:"PUT", headers:{"Content-Type":"application/json","X-Master-Key":SECRET_KEY}, body: JSON.stringify({game:{started:false}, players:{}, objectives:[]})}); 
+        location.reload(); 
+    } 
+}
