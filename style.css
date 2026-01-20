@@ -1,23 +1,20 @@
-/* ... mantieni il CSS precedente e aggiungi/modifica questi ... */
-.scroll-list {
-    text-align: left;
-    max-height: 150px;
+/* ... mantieni il CSS precedente e aggiungi questi ... */
+.slot-container {
+    max-height: 250px;
     overflow-y: auto;
-    background: #111;
-    padding: 5px;
+    background: #000;
     border: 1px solid #333;
-    margin-bottom: 10px;
+    padding: 5px;
 }
-.scroll-list label {
-    display: block;
-    font-size: 0.7rem;
-    padding: 5px 0;
+.obj-slot {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    padding: 8px 4px;
     border-bottom: 1px solid #222;
-    color: #fff;
+    align-items: center;
 }
-.scroll-list input {
-    margin-right: 10px;
-    width: auto;
-    padding: 0;
-}
-hr { border: 0; border-top: 1px solid #00ff00; margin: 10px 0; }
+.obj-slot input[type="text"] { width: 60px; font-size: 0.6rem; padding: 4px; margin: 0; }
+.obj-slot input[type="number"] { width: 85px; font-size: 0.6rem; padding: 4px; margin: 0; }
+.obj-slot input[type="checkbox"] { width: 20px; height: 20px; margin: 0; }
+.obj-slot span { font-size: 0.7rem; color: #00ff00; width: 15px; }
