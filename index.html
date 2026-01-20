@@ -1,55 +1,57 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>REMONDO SIX</title>
-
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-<link rel="stylesheet" href="style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>REMONDO SIX - TACTICAL</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+    <link rel="stylesheet" href="style.css">
 </head>
-
 <body>
 
-<h1>🎯 REMONDO SIX</h1>
+    <header>
+        <h1>🎯 REMONDO SIX</h1>
+        <div id="status">GPS IN ATTESA...</div>
+    </header>
 
-<div id="menu">
-  <input id="playerName" placeholder="Nome operatore">
-  
-  <select id="teamSelect">
-    <option value="RED">TEAM ROSSO</option>
-    <option value="BLUE">TEAM BLU</option>
-  </select>
+    <div id="menu">
+        <input id="playerName" placeholder="NOME OPERATORE">
+        <select id="teamSelect">
+            <option value="RED">TEAM ROSSO</option>
+            <option value="BLUE">TEAM BLU</option>
+        </select>
+        <div class="master-zone">
+            <label><input type="checkbox" id="isMaster"> MASTER MODE</label>
+            <input id="masterPass" type="password" placeholder="PASSWORD MASTER">
+            <input id="gameDuration" type="number" placeholder="MINUTI PARTITA" value="30">
+        </div>
+        <button class="btn-main" onclick="startGame()">▶ AVVIA / ENTRA</button>
+    </div>
 
-  <label>
-    <input type="checkbox" id="isMaster"> MASTER
-  </label>
+    <div id="game-ui" style="display:none;">
+        <div id="timer">⏱️ --:--</div>
+        <div id="score">🔴 0 | 🔵 0</div>
+        
+        <div id="map"></div>
 
-  <input id="masterPass" type="password" placeholder="Password Master">
+        <div class="info-section">
+            <h3>📍 OBIETTIVI</h3>
+            <ul id="scoreboard"></ul>
+        </div>
 
-  <input id="gameDuration" type="number" placeholder="Minuti partita">
+        <div class="info-section">
+            <h3>👥 OPERATORI ONLINE</h3>
+            <ul id="operators"></ul>
+        </div>
+    </div>
 
-  <button onclick="startGame()">▶ AVVIA / ENTRA</button>
-  <button onclick="stopGame()">⛔ FINE PARTITA</button>
-  <button onclick="resetBin()">🔥 RESET BIN</button>
-</div>
+    <div id="radar"></div>
 
-<div id="timer">⏱️ In attesa</div>
-<div id="score">🏆 ROSSI 0 | BLU 0</div>
-<div id="status">GPS…</div>
+    <div id="master-controls" style="display:none;">
+        <button class="btn-danger" onclick="resetBin()">🔥 RESET COMPLETO</button>
+    </div>
 
-<div id="map"></div>
-
-<h2>📍 OBIETTIVI</h2>
-<ul id="scoreboard"></ul>
-
-<h2>👥 OPERATORI ONLINE</h2>
-<ul id="operators"></ul>
-
-<div id="radar"></div>
-
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="script.js"></script>
-
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="script.js"></script>
 </body>
 </html>
