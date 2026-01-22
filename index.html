@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>DOMINIO SIX</title>
+    <title>DOMINIO SIX - TACTICAL</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
     <link rel="stylesheet" href="style.css">
 </head>
@@ -11,53 +11,72 @@
 
     <header>
         <h1>🎖️ DOMINIO SIX</h1>
-        <div id="gameStatusBanner" class="status-banner">CONNESSIONE...</div>
+        <div id="gameStatusBanner" class="status-banner">SINCRO SERVER...</div>
     </header>
 
     <div id="role-selection">
-        <button class="btn-role player" onclick="showLogin('PLAYER')">🕹️ GIOCATORE</button>
-        <button class="btn-role master" onclick="showLogin('MASTER')">🔑 MASTER</button>
-        <button class="btn-info" onclick="toggleInstructions(true)">📖 ISTRUZIONI</button>
+        <div class="logo-area"><p>SISTEMA DI COORDINAMENTO TATTICO</p></div>
+        <button class="btn-role player" onclick="showLogin('PLAYER')">🕹️ ACCEDI COME GIOCATORE</button>
+        <button class="btn-role master" onclick="showLogin('MASTER')">🔑 ACCEDI COME MASTER</button>
+        <button class="btn-info" onclick="toggleInstructions(true)">📖 ISTRUZIONI OPERATIVE</button>
     </div>
 
-    <div id="menu" style="display:none; padding: 20px;">
-        <button class="btn-back" onclick="backToRoles()">⬅ INDIETRO</button>
+    <div id="menu" style="display:none;">
+        <button class="btn-back" onclick="backToRoles()">⬅ ANNULLA</button>
         <h2 id="login-title">LOGIN</h2>
-        <input type="text" id="playerName" placeholder="NOME">
+        <input type="text" id="playerName" placeholder="NOME IN CODICE">
         
         <div id="player-only-fields">
+            <label>SELEZIONA FAZIONE:</label>
             <select id="teamSelect"></select>
         </div>
 
         <div id="master-only-fields" style="display:none;">
-            <input type="password" id="masterPass" placeholder="PASSWORD">
+            <input type="password" id="masterPass" placeholder="CODICE DI ACCESSO">
             <div class="team-manager">
+                <h4>🚩 CONFIGURAZIONE 4 SQUADRE</h4>
                 <div id="teamInputContainer">
                     <div class="team-slot"><input type="text" class="t-name" value="RED"><input type="color" class="t-color" value="#ff0000"></div>
                     <div class="team-slot"><input type="text" class="t-name" value="BLUE"><input type="color" class="t-color" value="#00ffff"></div>
+                    <div class="team-slot"><input type="text" class="t-name" value="GREEN"><input type="color" class="t-color" value="#00ff00"></div>
+                    <div class="team-slot"><input type="text" class="t-name" value="GOLD"><input type="color" class="t-color" value="#ffaa00"></div>
                 </div>
             </div>
             <input type="number" id="gameDuration" value="30">
-            <div id="objSlotContainer" class="slot-container"></div>
+            <div id="objSlotContainer" class="slot-container">
+                <h4>📍 SETTORI</h4>
+            </div>
         </div>
-
-        <button class="btn-main" onclick="startGame()">▶ AVVIA</button>
+        <button class="btn-main" onclick="startGame()">▶ AVVIA OPERAZIONE</button>
     </div>
 
     <div id="game-ui" style="display:none;">
         <div id="top-bar">
-            <div id="timer">00:00</div>
+            <div id="timer">⏱️ --:--</div>
             <div id="score-container"></div>
         </div>
-        <div id="map" style="height: 400px; width: 100%; margin-top:10px;"></div>
-        <div class="sos-bar"><button id="sosBtn" onclick="triggerSOS()">🚑 HIT</button></div>
-        <div class="info-section"><ul id="scoreboard"></ul></div>
+        <div class="map-container">
+            <button onclick="centerMap()" class="btn-center">🎯</button>
+            <div id="map"></div>
+        </div>
+        <div class="sos-bar"><button id="sosBtn" onclick="triggerSOS()">🚑 SEGNALA HIT (OUT)</button></div>
+        <div id="myCoords" style="font-size: 0.6rem; color: #666; margin-top:5px;">--.----, --.----</div>
+        <div class="info-section">
+            <h3>📍 STATO SETTORI</h3>
+            <ul id="scoreboard"></ul>
+        </div>
     </div>
 
-    <div id="modal-instructions" class="modal" onclick="this.style.display='none'">
+    <div id="modal-instructions" class="modal">
         <div class="modal-content">
-            <h2>ISTRUZIONI</h2>
-            <p>1. Scegli Fazione.<br>2. Conquista settori (3 min).<br>3. Segnala nemici toccando mappa.</p>
+            <span class="close" onclick="toggleInstructions(false)">&times;</span>
+            <h2>📖 MANUALE OPERATIVO</h2>
+            <div class="inst-text">
+                <p><strong>DOMINIO:</strong> Resta entro 15m dal settore per 3 min (180s) per catturarlo.</p>
+                <p><strong>INTEL:</strong> Tocca la mappa per segnalare nemici ⚠️ (visibile per 2 min).</p>
+                <p><strong>HIT:</strong> Se colpito, attiva "SEGNALA HIT" per avvisare il team.</p>
+                <p><strong>BUSSOLA:</strong> La mappa ruota o mostra la direzione in base al sensore del telefono.</p>
+            </div>
         </div>
     </div>
 
