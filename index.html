@@ -4,13 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>REMONDO SIX</title>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <header>
         <h1>🎯 REMONDO SIX</h1>
-        <div id="gameStatusBanner" class="status-banner">SISTEMA INIZIALIZZAZIONE...</div>
+        <div id="gameStatusBanner" class="status-banner">SISTEMA OFFLINE</div>
     </header>
 
     <div id="menu">
@@ -21,23 +21,25 @@
         </select>
 
         <div class="master-zone">
-            <label><input type="checkbox" id="isMaster" onchange="toggleMasterTools()"> MASTER MODE</label>
-            <div id="masterTools" style="display:none;">
-                <input id="masterPass" type="password" placeholder="PASSWORD MASTER">
+            <div id="passwordArea">
+                <input id="masterPass" type="password" placeholder="PASSWORD MASTER" oninput="checkMasterPass()">
+            </div>
+            
+            <div id="masterTools" style="display:none; border: 1px dashed #00ff00; padding: 10px; margin-top: 10px;">
+                <p style="color:yellow; font-size:0.7rem;">MODALITÀ MASTER ATTIVA</p>
                 <div class="m-row">
                     <input id="team1Name" placeholder="NOME ROSSI" value="RED" oninput="updateTeamLabels()">
                     <input id="team2Name" placeholder="NOME BLU" value="BLUE" oninput="updateTeamLabels()">
                 </div>
                 <div class="m-row">
-                    <label>MINUTI CONQUISTA:</label>
+                    <label>MINUTI CATTURA:</label>
                     <input id="conquerTime" type="number" value="3" style="width:50px">
                 </div>
-                <input id="gameDuration" type="number" value="30">
                 <div id="objSlotContainer" class="slot-list"></div>
-                <button class="btn-danger" onclick="resetBin()">🔥 RESET SERVER</button>
+                <button class="btn-danger" onclick="resetBin()">🔥 RESET TOTALE SERVER</button>
             </div>
         </div>
-        <button onclick="startGame()">▶ AVVIA / ENTRA</button>
+        <button id="mainBtn" onclick="startGame()">▶ ENTRA IN PARTITA</button>
     </div>
 
     <div id="game-ui" style="display:none;">
@@ -55,7 +57,6 @@
             <h3>📍 OBIETTIVI</h3>
             <ul id="scoreboard"></ul>
         </div>
-
         <div class="info-section">
             <h3>👥 COMPAGNI ONLINE</h3>
             <ul id="playerList"></ul>
