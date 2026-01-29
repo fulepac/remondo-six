@@ -12,16 +12,11 @@ function initMap() {
     L.tileLayer('https://{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', { subdomains:['mt0','mt1','mt2','mt3'] }).addTo(map);
 }
 
-// Funzione per attivare sensori su iOS/Android e avviare gioco
+// Attiva bussola e avvia
 function enableSensorsAndStart() {
     if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
         DeviceOrientationEvent.requestPermission()
-            .then(permissionState => {
-                if (permissionState === 'granted') {
-                    window.addEventListener('deviceorientation', handleRotation, true);
-                    startGame();
-                }
-            })
+            .then(res => { if (res === 'granted') { window.addEventListener('deviceorientation', handleRotation, true); startGame(); } })
             .catch(console.error);
     } else {
         window.addEventListener('deviceorientation', handleRotation, true);
@@ -33,7 +28,6 @@ function handleRotation(e) {
     let compass = e.webkitCompassHeading || (360 - e.alpha);
     if (compass) {
         state.currentHeading = compass;
-        // Ruota il div della mappa in senso OPPOSTO alla bussola
         document.getElementById("map-rotate").style.transform = `rotate(${-compass}deg)`;
     }
 }
@@ -57,9 +51,9 @@ async function loadConfigFromServer() {
             container.innerHTML += `
                 <div class="obj-slot">
                     <input type="checkbox" class="s-active" ${record.objectives && record.objectives[i] ? 'checked' : ''}>
-                    <input type="text" class="s-name" value="${o.name}" style="width:50px">
-                    <input type="text" class="s-lat" value="${o.lat}" style="flex:1">
-                    <input type="text" class="s-lon" value="${o.lon}" style="flex:1">
+                    <input type="text" class="s-name" value="${o.name}">
+                    <input type="text" class="s-lat" value="${o.lat}">
+                    <input type="text" class="s-lon" value="${o.lon}">
                 </div>`;
         }
     } catch(e) {}
@@ -69,23 +63,17 @@ async function startGame() {
     state.playerName = document.getElementById("playerName").value.trim().toUpperCase();
     state.playerTeam = document.getElementById("teamSelect").value;
     if(!state.playerName) return alert("INSERISCI NOME");
-
     document.getElementById("menu").style.display = "none";
     document.getElementById("game-ui").style.display = "block";
-
     setTimeout(() => {
         map.invalidateSize();
         navigator.geolocation.watchPosition(p => {
             const pos = [p.coords.latitude, p.coords.longitude];
             map.setView(pos, 18);
-            if(!state.playerMarker) {
-                state.playerMarker = L.circleMarker(pos, {radius: 5, color: '#fff', fillOpacity: 1}).addTo(map);
-            } else {
-                state.playerMarker.setLatLng(pos);
-            }
+            if(!state.playerMarker) state.playerMarker = L.circleMarker(pos, {radius: 5, color: '#fff', fillOpacity: 1}).addTo(map);
+            else state.playerMarker.setLatLng(pos);
         }, null, {enableHighAccuracy:true});
     }, 500);
-
     setInterval(sync, 4000);
 }
 
@@ -93,26 +81,17 @@ async function sync() {
     try {
         const res = await fetch(`${URL}/latest`, { headers: {"X-Master-Key":SECRET_KEY}, cache:'no-store'});
         const { record } = await res.json();
-        
         if(state.playerMarker) {
             if(!record.players) record.players = {};
-            record.players[state.playerName] = {
-                team: state.playerTeam, lat: state.playerMarker.getLatLng().lat, lon: state.playerMarker.getLatLng().lng, last: Date.now()
-            };
+            record.players[state.playerName] = { team: state.playerTeam, lat: state.playerMarker.getLatLng().lat, lon: state.playerMarker.getLatLng().lng, last: Date.now() };
         }
-
         if(state.isMaster && !record.game.started) {
             record.game.started = true;
             record.game.endTime = Date.now() + (parseInt(document.getElementById("gameDuration").value) * 60000);
             record.objectives = [];
             document.querySelectorAll(".obj-slot").forEach(s => {
                 if(s.querySelector(".s-active").checked) {
-                    record.objectives.push({
-                        name: s.querySelector(".s-name").value,
-                        lat: parseFloat(s.querySelector(".s-lat").value),
-                        lon: parseFloat(s.querySelector(".s-lon").value),
-                        owner: "LIBERO"
-                    });
+                    record.objectives.push({ name: s.querySelector(".s-name").value, lat: parseFloat(s.querySelector(".s-lat").value), lon: parseFloat(s.querySelector(".s-lon").value), owner: "LIBERO" });
                 }
             });
         }
@@ -128,12 +107,10 @@ function updateUI(r) {
         const s = Math.max(0, Math.floor((diff % 60000) / 1000));
         document.getElementById("timer").innerText = `⏱️ ${m}:${s.toString().padStart(2,'0')}`;
     }
-
     activeMarkers.forEach(m => map.removeLayer(m)); activeMarkers = [];
-    
     (r.objectives || []).forEach(obj => {
         let color = obj.owner === 'RED' ? 'red' : obj.owner === 'BLUE' ? 'cyan' : 'white';
-        activeMarkers.push(L.circle([obj.lat, obj.lon], {radius:15, color: color}).addTo(map).bindTooltip(obj.name, {permanent:true, direction:'top'}));
+        activeMarkers.push(L.circle([obj.lat, obj.lon], {radius: 15, color: color}).addTo(map).bindTooltip(obj.name, {permanent:true, direction:'top'}));
     });
 }
 
@@ -148,5 +125,4 @@ async function resetBin() {
 
 function centerMap() { if(state.playerMarker) map.setView(state.playerMarker.getLatLng(), 18); }
 function reloadMap() { map.invalidateSize(); }
-
 window.onload = initMap;
