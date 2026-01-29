@@ -14,18 +14,19 @@
     </header>
 
     <div id="menu">
-        <input id="playerName" placeholder="NOME OPERATORE">
+        <input id="playerName" placeholder="IL TUO NOME">
         <select id="teamSelect">
             <option value="RED">TEAM ROSSO</option>
             <option value="BLUE">TEAM BLU</option>
         </select>
 
         <div class="master-zone">
-            <label><input type="checkbox" id="isMaster" onchange="toggleMasterTools()"> MASTER MODE</label>
+            <label><input type="checkbox" id="isMaster" onchange="toggleMasterTools()"> MODALITÀ MASTER</label>
             <div id="masterTools" style="display:none;">
                 <input id="masterPass" type="password" placeholder="PASSWORD MASTER">
                 <input id="gameDuration" type="number" placeholder="DURATA (MIN)" value="30">
-                <div class="slot-container" id="objSlotContainer"></div>
+                <div class="slot-container" id="objSlotContainer">
+                    </div>
             </div>
         </div>
         <button class="btn-main" onclick="startGame()">▶ AVVIA OPERAZIONE</button>
@@ -46,13 +47,13 @@
         </div>
 
         <div class="info-section">
-            <h3>📍 OBIETTIVI ATTIVI</h3>
+            <h3>📍 OBIETTIVI</h3>
             <ul id="scoreboard"></ul>
         </div>
     </div>
 
     <div id="master-controls" style="display:none;">
-        <button class="btn-danger" onclick="resetBin()">🔥 RESET TOTALE</button>
+        <button class="btn-danger" onclick="resetBin()">🔥 RESET TOTALE PARTITA</button>
     </div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
