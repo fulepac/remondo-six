@@ -20,7 +20,6 @@
             <option value="RED">TEAM ROSSO</option>
             <option value="BLUE">TEAM BLU</option>
         </select>
-
         <div class="master-zone">
             <label><input type="checkbox" id="isMaster" onchange="toggleMasterTools()"> MASTER MODE</label>
             <div id="masterTools" style="display:none;">
@@ -29,42 +28,32 @@
                 <div id="objSlotContainer" class="slot-container"></div>
             </div>
         </div>
-
-        <button class="btn-main" onclick="startGame()">▶ AVVIA / ENTRA</button>
+        <button onclick="startGame()">▶ AVVIA / ENTRA</button>
     </div>
 
     <div id="game-ui" style="display:none;">
         <div id="timer">⏱️ --:--</div>
         <div id="score">🔴 0 | 🔵 0</div>
         
-        <div class="map-outer">
-            <div id="map-rotate-wrapper">
+        <div class="map-container">
+            <div id="compass-ui">
+                <svg id="compass-arrow" viewBox="0 0 100 100">
+                    <polygon points="50,5 95,95 50,75 5,95" fill="red"/>
+                </svg>
+            </div>
+            <button onclick="centerMap()" class="btn-center">🎯 CENTRA</button>
+            <div id="map-rotate-container">
                 <div id="map"></div>
             </div>
-            
-            <div id="compass-ui">
-                <div id="compass-needle">N</div>
-            </div>
-            
-            <button onclick="centerMap()" class="btn-center">🎯 CENTRA</button>
         </div>
 
         <div class="info-section">
-            <h3>📍 OBIETTIVI (CONQUISTA: 3 MIN)</h3>
+            <h3>📍 OBIETTIVI (CONQUISTA 3 MIN)</h3>
             <ul id="scoreboard"></ul>
-        </div>
-
-        <div class="info-section">
-            <h3>👥 COMPAGNI ONLINE</h3>
-            <ul id="operators"></ul>
         </div>
     </div>
 
     <div id="radar"></div>
-
-    <div id="master-controls" style="display:none;">
-        <button class="btn-danger" onclick="resetBin()">🔥 RESET COMPLETO PARTITA</button>
-    </div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="script.js"></script>
