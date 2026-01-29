@@ -10,7 +10,7 @@
 <body>
     <header>
         <h1>🎯 REMONDO SIX</h1>
-        <div id="gameStatusBanner" class="status-banner">SISTEMA PRONTO</div>
+        <div id="gameStatusBanner" class="status-banner">SISTEMA ONLINE</div>
     </header>
 
     <div id="menu">
@@ -21,14 +21,14 @@
         </select>
         <div class="master-zone">
             <label><input type="checkbox" id="isMaster" onchange="toggleMasterTools()"> MASTER MODE</label>
-            <div id="masterTools" style="display:none;">
+            <div id="masterTools" style="display:none; border: 1px dashed #555; padding: 10px; margin-top: 5px;">
                 <input id="masterPass" type="password" placeholder="PASSWORD MASTER">
                 <input id="gameDuration" type="number" value="30">
                 <div id="objSlotContainer"></div>
-                <button class="btn-danger" onclick="resetBin()" style="margin-top:10px;">🔥 RESET TOTALE SERVER</button>
+                <button class="btn-danger" onclick="resetBin()" style="margin-top:10px;">🔥 RESET SERVER PARTITA</button>
             </div>
         </div>
-        <button onclick="startGame()">▶ AVVIA PARTITA</button>
+        <button onclick="startGame()">▶ AVVIA / ENTRA</button>
     </div>
 
     <div id="game-ui" style="display:none;">
@@ -39,13 +39,13 @@
             <div id="map-rotate-wrapper">
                 <div id="map"></div>
             </div>
-            <button onclick="centerMap()" class="map-btn btn-gps">🎯</button>
-            <button onclick="reloadMap()" class="map-btn btn-reload">🔄</button>
+            <button onclick="centerMap()" class="map-fixed-btn btn-top-right">🎯</button>
+            <button onclick="reloadMap()" class="map-fixed-btn btn-bottom-right">🔄</button>
             <div id="compass-ui"><div id="compass-needle">N</div></div>
         </div>
 
         <div class="info-section">
-            <h3>📍 STATO OBIETTIVI</h3>
+            <h3>📍 OBIETTIVI</h3>
             <ul id="scoreboard"></ul>
         </div>
     </div>
