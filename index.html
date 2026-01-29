@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>REMONDO SIX</title>
+    <title>REMONDO SIX - ROTATING MAP</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <header>
         <h1>🎯 REMONDO SIX</h1>
-        <div id="gameStatusBanner" class="status-banner">SISTEMA PRONTO</div>
+        <div id="gameStatusBanner" class="status-banner">BUSSOLA: ATTESA PERMESSI</div>
     </header>
 
     <div id="menu">
@@ -22,46 +22,35 @@
 
         <div class="master-zone">
             <input id="masterPass" type="password" placeholder="PASSWORD MASTER" oninput="checkMasterPass()">
-            
             <div id="masterTools" style="display:none; border: 1px dashed #00ff00; padding: 10px; margin-top: 10px; background: #001100;">
                 <div class="m-config-grid">
-                    <div class="m-row">
-                        <label>DURATA GARA (MIN):</label>
-                        <input id="gameDuration" type="number" value="30">
-                    </div>
-                    <div class="m-row">
-                        <label>CATTURA (SEC):</label>
-                        <input id="captureTime" type="number" value="180">
-                    </div>
+                    <div class="m-row"><label>GARA (MIN):</label><input id="gameDuration" type="number" value="30"></div>
+                    <div class="m-row"><label>CATTURA (SEC):</label><input id="captureTime" type="number" value="180"></div>
                 </div>
-
                 <p style="font-size:0.7rem; color:yellow; margin:10px 0 5px 0;">10 OBIETTIVI EDITABILI:</p>
-                <div id="objSlotContainer" class="slot-list">
-                    </div>
-                
+                <div id="objSlotContainer" class="slot-list"></div>
                 <button class="btn-danger" onclick="resetBin()">🔥 RESET (MANTIENE OBJ)</button>
             </div>
         </div>
-        <button id="mainBtn" onclick="startGame()">▶ ENTRA IN PARTITA</button>
+        <button id="mainBtn" onclick="enableSensorsAndStart()">▶ ATTIVA BUSSOLA E ENTRA</button>
     </div>
 
     <div id="game-ui" style="display:none;">
         <div id="timer" class="countdown-display">⏱️ --:--</div>
-        <div id="score">🔴 0 | 🔵 0</div>
         
         <div class="map-outer">
-            <div id="map"></div>
+            <div id="map-rotate">
+                <div id="map"></div>
+            </div>
+            <div id="player-pointer">▲</div>
+            
             <button onclick="centerMap()" class="map-btn btn-gps">🎯</button>
             <button onclick="reloadMap()" class="map-btn btn-reload">🔄</button>
         </div>
 
         <div class="info-section">
-            <h3>📍 OBIETTIVI</h3>
+            <div id="score">🔴 0 | 🔵 0</div>
             <ul id="scoreboard"></ul>
-        </div>
-        <div class="info-section">
-            <h3>👥 SQUADRA</h3>
-            <ul id="playerList"></ul>
         </div>
     </div>
 
