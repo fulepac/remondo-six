@@ -10,7 +10,7 @@
 <body>
     <header>
         <h1>🎯 REMONDO SIX</h1>
-        <div id="gameStatusBanner" class="status-banner">CONTROLLO...</div>
+        <div id="gameStatusBanner" class="status-banner">SISTEMA PRONTO</div>
     </header>
 
     <div id="menu">
@@ -25,9 +25,10 @@
                 <input id="masterPass" type="password" placeholder="PASSWORD MASTER">
                 <input id="gameDuration" type="number" value="30">
                 <div id="objSlotContainer"></div>
+                <button class="btn-danger" onclick="resetBin()" style="margin-top:10px;">🔥 RESET TOTALE SERVER</button>
             </div>
         </div>
-        <button class="btn-main" onclick="startGame()">▶ AVVIA / ENTRA</button>
+        <button onclick="startGame()">▶ AVVIA PARTITA</button>
     </div>
 
     <div id="game-ui" style="display:none;">
@@ -44,13 +45,9 @@
         </div>
 
         <div class="info-section">
-            <h3>📍 OBIETTIVI</h3>
+            <h3>📍 STATO OBIETTIVI</h3>
             <ul id="scoreboard"></ul>
         </div>
-    </div>
-
-    <div id="master-controls" style="margin-top: 20px;">
-        <button class="btn-danger" onclick="resetBin()">🔥 RESET SERVER PARTITA</button>
     </div>
 
     <div id="radar"></div>
