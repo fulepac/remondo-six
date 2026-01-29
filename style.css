@@ -1,57 +1,23 @@
 * { box-sizing: border-box; outline: none; }
 body { background: #0a0a0a; color: #00ff00; font-family: monospace; margin: 0; padding: 10px; text-transform: uppercase; overflow-x: hidden; }
 
-.map-outer {
-    position: relative;
-    width: 100%;
-    height: 450px;
-    margin: 10px 0;
-    border: 2px solid #00ff00;
-    border-radius: 10px;
-    overflow: hidden;
-}
+/* MAPPA E BUSSOLA */
+.map-outer { position: relative; width: 100%; height: 420px; margin: 10px 0; border: 2px solid #00ff00; border-radius: 10px; overflow: hidden; }
+#map-rotate-wrapper { width: 100%; height: 100%; transition: transform 0.1s linear; display: flex; align-items: center; justify-content: center; }
+#map { width: 160%; height: 160%; flex-shrink: 0; background: #000; }
+#compass-ui { position: absolute; bottom: 15px; left: 15px; z-index: 2000; width: 55px; height: 55px; background: rgba(0,0,0,0.85); border: 2px solid #00ff00; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+#compass-needle { font-weight: bold; color: red; font-size: 1.3rem; transition: transform 0.1s linear; }
 
-#map-rotate-wrapper {
-    width: 100%;
-    height: 100%;
-    transition: transform 0.1s linear;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
+/* MASTER TOOLS SLOT */
+.slot-container { max-height: 200px; overflow-y: auto; background: #000; border: 1px solid #333; padding: 5px; margin-top: 5px; }
+.obj-slot { display: flex; gap: 4px; padding: 5px 0; border-bottom: 1px solid #222; align-items: center; font-size: 0.7rem; }
+.obj-slot input { padding: 4px; font-size: 0.65rem; border: 1px solid #444; margin: 0; }
+.s-name { width: 60px; } .s-lat, .s-lon { width: 80px; }
 
-#map {
-    width: 160%; 
-    height: 160%;
-    flex-shrink: 0;
-    background: #000;
-}
-
-#compass-ui {
-    position: absolute;
-    bottom: 20px;
-    left: 20px;
-    z-index: 2000;
-    width: 60px;
-    height: 60px;
-    background: rgba(0,0,0,0.85);
-    border: 2px solid #00ff00;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-#compass-needle {
-    font-weight: bold;
-    color: #ff0000;
-    font-size: 1.4rem;
-    transition: transform 0.1s linear;
-}
-
+/* UI */
 input, select, button { background: #1a1a1a; border: 1px solid #00ff00; color: #00ff00; padding: 12px; width: 100%; margin-bottom: 5px; border-radius: 5px; }
-#timer { font-size: 2.5rem; color: #ff0000; font-weight: bold; }
-#score { font-size: 1.2rem; background: #222; padding: 8px; margin-bottom: 10px; }
-.btn-center { position: absolute; top: 10px; right: 10px; z-index: 2000; width: auto; background: rgba(0,0,0,0.8); }
+.status-banner { background: #222; padding: 8px; border: 1px solid #444; font-size: 0.7rem; margin-bottom: 10px; }
+#timer { font-size: 2.2rem; color: #ff0000; }
+#score { font-size: 1.1rem; background: #222; padding: 5px; }
 .info-section { text-align: left; background: #111; padding: 10px; margin-top: 10px; border-radius: 5px; }
-#radar { width: 110px; height: 110px; border: 2px solid #00ff00; border-radius: 50%; position: fixed; bottom: 15px; right: 15px; z-index: 3000; background: rgba(0,30,0,0.4); overflow: hidden; }
+#radar { width: 100px; height: 100px; border: 2px solid #00ff00; border-radius: 50%; position: fixed; bottom: 10px; right: 10px; z-index: 3000; background: rgba(0,20,0,0.4); overflow: hidden; }
