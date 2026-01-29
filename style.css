@@ -1,29 +1,36 @@
 * { box-sizing: border-box; outline: none; }
-body { background: #000; color: #00ff00; font-family: monospace; margin: 0; padding: 10px; text-transform: uppercase; }
+body { background: #000; color: #00ff00; font-family: monospace; margin: 0; padding: 10px; overflow: hidden; }
 
-#menu { background: #111; padding: 15px; border: 1px solid #333; display: flex; flex-direction: column; gap: 10px; border-radius: 8px; }
+#menu { background: #111; padding: 15px; border: 1px solid #333; display: flex; flex-direction: column; gap: 10px; }
 input, select, button { background: #1a1a1a; border: 1px solid #00ff00; color: #00ff00; padding: 12px; font-size: 0.9rem; width: 100%; border-radius: 4px; }
 
-.m-config-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-.m-row { display: flex; flex-direction: column; align-items: flex-start; }
-.m-row label { font-size: 0.6rem; color: #aaa; margin-bottom: 2px; }
+.map-outer { 
+    position: relative; width: 100%; height: 450px; 
+    border: 2px solid #00ff00; border-radius: 10px; 
+    margin: 10px 0; background: #000; overflow: hidden; 
+}
 
-.slot-list { margin-top: 10px; max-height: 200px; overflow-y: auto; background: #000; padding: 5px; border: 1px solid #222; }
-.obj-slot { display: flex; gap: 3px; margin-bottom: 5px; }
-.obj-slot input { font-size: 0.7rem; padding: 5px; height: 30px; }
+/* Contenitore che ruota */
+#map-rotate {
+    width: 100%; height: 100%;
+    transition: transform 0.1s linear;
+}
 
-.map-outer { position: relative; width: 100%; height: 350px; border: 2px solid #00ff00; border-radius: 10px; margin: 10px 0; background: #111; overflow: hidden; }
-#map { width: 100%; height: 100%; background: #000; }
+#map { width: 100%; height: 100%; }
 
-.map-btn { position: absolute; z-index: 1000; background: rgba(0,0,0,0.8); border: 2px solid #00ff00; color: #00ff00; width: 44px; height: 44px; border-radius: 50%; }
+/* Puntatore fisso al centro dello schermo */
+#player-pointer {
+    position: absolute; top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 2000; font-size: 24px; color: #fff;
+    text-shadow: 0 0 5px #000; pointer-events: none;
+}
+
+.map-btn { position: absolute; z-index: 2005; background: rgba(0,0,0,0.8); border: 2px solid #00ff00; color: #00ff00; width: 44px; height: 44px; border-radius: 50%; }
 .btn-gps { top: 10px; right: 10px; }
 .btn-reload { bottom: 10px; right: 10px; }
 
-.countdown-display { font-size: 2rem; font-weight: bold; text-align: center; color: #fff; margin: 5px 0; }
-.status-banner { background: #111; padding: 10px; border: 1px solid #444; text-align: center; font-size: 0.8rem; margin-bottom: 10px; }
-.status-active { color: #f00; border-color: #f00; animation: blink 2s infinite; }
-@keyframes blink { 50% { opacity: 0.5; } }
-
-.info-section { background: #111; padding: 10px; border: 1px solid #222; margin-top: 10px; }
-li { display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid #222; font-size: 0.8rem; }
-.btn-danger { color: red; border-color: red; margin-top: 10px; }
+.countdown-display { font-size: 2rem; font-weight: bold; text-align: center; color: #fff; }
+.slot-list { margin-top: 10px; max-height: 180px; overflow-y: auto; background: #000; border: 1px solid #222; }
+.obj-slot { display: flex; gap: 2px; margin-bottom: 4px; }
+.obj-slot input { font-size: 0.6rem; padding: 4px; height: 25px; }
