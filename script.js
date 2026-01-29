@@ -16,11 +16,10 @@ function checkMasterPass() {
     if(document.getElementById("masterPass").value === PWD_MASTER) {
         state.isMaster = true;
         document.getElementById("masterTools").style.display = "block";
-        loadCurrentConfig(); 
+        loadCurrentConfig();
     }
 }
 
-// RIPRISTINATO: Genera i 10 slot editabili caricando i dati esistenti
 async function loadCurrentConfig() {
     try {
         const res = await fetch(`${URL}/latest`, { headers: {"X-Master-Key":SECRET_KEY}});
@@ -28,19 +27,39 @@ async function loadCurrentConfig() {
         const container = document.getElementById("objSlotContainer");
         container.innerHTML = "";
         
-        const serverObjs = record.objectives || [];
+        const currentObjs = record.objectives || [];
         for (let i = 0; i < 10; i++) {
-            const o = serverObjs[i] || { name: `OBJ${i+1}`, lat: 0, lon: 0 };
-            const checked = serverObjs[i] ? "checked" : "";
+            const o = currentObjs[i] || { name: `OBJ${i+1}`, lat: 0, lon: 0 };
+            const isChecked = currentObjs[i] ? "checked" : "";
             container.innerHTML += `
-                <div class="obj-slot" style="display:flex; gap:2px; margin-bottom:3px;">
-                    <input type="checkbox" class="s-active" ${checked}>
-                    <input type="text" class="s-name" value="${o.name}" style="width:50px;">
-                    <input type="text" class="s-lat" value="${o.lat}" style="flex:1;">
-                    <input type="text" class="s-lon" value="${o.lon}" style="flex:1;">
+                <div class="obj-slot">
+                    <input type="checkbox" class="s-active" ${isChecked}>
+                    <input type="text" class="s-name" value="${o.name}" style="width:60px">
+                    <input type="text" class="s-lat" value="${o.lat}" style="flex:1">
+                    <input type="text" class="s-lon" value="${o.lon}" style="flex:1">
                 </div>`;
         }
-    } catch(e) { console.error("Errore caricamento"); }
+    } catch(e) { console.error("Errore caricamento."); }
+}
+
+async function startGame() {
+    state.playerName = document.getElementById("playerName").value.trim().toUpperCase();
+    state.playerTeam = document.getElementById("teamSelect").value;
+    if(!state.playerName) return alert("INSERISCI NOME");
+
+    document.getElementById("menu").style.display = "none";
+    document.getElementById("game-ui").style.display = "block";
+
+    setTimeout(() => {
+        map.invalidateSize();
+        navigator.geolocation.getCurrentPosition(p => {
+            const pos = [p.coords.latitude, p.coords.longitude];
+            map.setView(pos, 18);
+            state.playerMarker = L.marker(pos).addTo(map).bindTooltip("IO", {permanent:true});
+        }, null, {enableHighAccuracy:true});
+    }, 500);
+
+    setInterval(sync, 4000);
 }
 
 async function sync() {
@@ -55,14 +74,12 @@ async function sync() {
             };
         }
 
-        // Se il Master clicca Avvia Partita (prima sincronizzazione dopo password)
         if(state.isMaster && !record.game.started) {
             record.game.started = true;
             record.game.durationMin = parseInt(document.getElementById("gameDuration").value) || 30;
-            record.game.captureTimeSec = parseInt(document.getElementById("captureTime").value) || 180;
+            record.game.captureSec = parseInt(document.getElementById("captureTime").value) || 180;
             record.game.endTime = Date.now() + (record.game.durationMin * 60000);
             
-            // Salva i 10 slot
             record.objectives = [];
             document.querySelectorAll(".obj-slot").forEach(s => {
                 if(s.querySelector(".s-active").checked) {
@@ -70,8 +87,7 @@ async function sync() {
                         name: s.querySelector(".s-name").value,
                         lat: parseFloat(s.querySelector(".s-lat").value),
                         lon: parseFloat(s.querySelector(".s-lon").value),
-                        owner: "LIBERO",
-                        progress: 0
+                        owner: "LIBERO"
                     });
                 }
             });
@@ -84,6 +100,56 @@ async function sync() {
     } catch(e) {}
 }
 
-// ... (Resto delle funzioni updateUI, centerMap, reloadMap come prima) ...
+function updateUI(r) {
+    if(r.game.endTime) {
+        const diff = r.game.endTime - Date.now();
+        if(diff > 0) {
+            const m = Math.floor(diff / 60000);
+            const s = Math.floor((diff % 60000) / 1000);
+            document.getElementById("timer").innerText = `⏱️ ${m}:${s.toString().padStart(2,'0')}`;
+        } else {
+            document.getElementById("timer").innerText = "FINE GARA";
+        }
+    }
 
-window.onload = () => { initMap(); };
+    const banner = document.getElementById("gameStatusBanner");
+    banner.innerText = r.game.started ? "OPERAZIONE ATTIVA" : "ATTESA MASTER";
+    banner.className = r.game.started ? "status-banner status-active" : "status-banner";
+
+    activeMarkers.forEach(m => map.removeLayer(m)); activeMarkers = [];
+    
+    // Squadra
+    const pList = document.getElementById("playerList"); pList.innerHTML = "";
+    Object.entries(r.players || {}).forEach(([name, p]) => {
+        if(Date.now() - p.last < 15000 && p.team === state.playerTeam) {
+            pList.innerHTML += `<li>${name} <span>ONLINE</span></li>`;
+            if(name !== state.playerName) {
+                activeMarkers.push(L.circleMarker([p.lat, p.lon], {radius:7, color: p.team==='RED'?'red':'cyan', fillOpacity:1}).addTo(map));
+            }
+        }
+    });
+
+    // Obiettivi
+    const sb = document.getElementById("scoreboard"); sb.innerHTML = "";
+    (r.objectives || []).forEach(obj => {
+        sb.innerHTML += `<li>${obj.name}: ${obj.owner}</li>`;
+        activeMarkers.push(L.circle([obj.lat, obj.lon], {radius:15, color: obj.owner==='RED'?'red':obj.owner==='BLUE'?'cyan':'white'}).addTo(map));
+    });
+}
+
+async function resetBin() { 
+    if(!confirm("TERMINARE PARTITA? (GLI OBIETTIVI CARICATI RIMANGONO)")) return;
+    try {
+        const res = await fetch(`${URL}/latest`, { headers: {"X-Master-Key":SECRET_KEY}});
+        const { record } = await res.json();
+        record.game.started = false;
+        record.game.endTime = null;
+        record.players = {};
+        await fetch(URL, { method:"PUT", headers:{"Content-Type":"application/json","X-Master-Key":SECRET_KEY}, body: JSON.stringify(record)});
+        location.reload();
+    } catch(e) { alert("Errore Reset"); }
+}
+
+function reloadMap() { map.invalidateSize(); }
+function centerMap() { if(state.playerMarker) map.setView(state.playerMarker.getLatLng(), 18); }
+window.onload = initMap;
