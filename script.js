@@ -7,39 +7,51 @@ let state = { isMaster: false, playerName: "", playerTeam: "", playerMarker: nul
 let activeMarkers = [];
 let map;
 
+// Carica mappa subito
 function initMap() {
     map = L.map("map", { zoomControl: false, attributionControl: false }).setView([45.2377, 8.8097], 18);
     L.tileLayer('https://{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', { subdomains:['mt0','mt1','mt2','mt3'] }).addTo(map);
+}
+
+// Crea slot vuoti subito per evitare schermata bianca
+function createEmptySlots() {
+    const container = document.getElementById("objSlotContainer");
+    container.innerHTML = "";
+    for (let i = 0; i < 10; i++) {
+        container.innerHTML += `
+            <div class="obj-slot">
+                <input type="checkbox" class="s-active">
+                <input type="text" class="s-name" placeholder="NOME" style="width:60px">
+                <input type="text" class="s-lat" placeholder="LAT" style="flex:1">
+                <input type="text" class="s-lon" placeholder="LON" style="flex:1">
+            </div>`;
+    }
 }
 
 function checkMasterPass() {
     if(document.getElementById("masterPass").value === PWD_MASTER) {
         state.isMaster = true;
         document.getElementById("masterTools").style.display = "block";
-        loadCurrentConfig();
+        loadConfigFromServer();
     }
 }
 
-async function loadCurrentConfig() {
+async function loadConfigFromServer() {
     try {
         const res = await fetch(`${URL}/latest`, { headers: {"X-Master-Key":SECRET_KEY}});
         const { record } = await res.json();
-        const container = document.getElementById("objSlotContainer");
-        container.innerHTML = "";
-        
-        const currentObjs = record.objectives || [];
-        for (let i = 0; i < 10; i++) {
-            const o = currentObjs[i] || { name: `OBJ${i+1}`, lat: 0, lon: 0 };
-            const isChecked = currentObjs[i] ? "checked" : "";
-            container.innerHTML += `
-                <div class="obj-slot">
-                    <input type="checkbox" class="s-active" ${isChecked}>
-                    <input type="text" class="s-name" value="${o.name}" style="width:60px">
-                    <input type="text" class="s-lat" value="${o.lat}" style="flex:1">
-                    <input type="text" class="s-lon" value="${o.lon}" style="flex:1">
-                </div>`;
+        const slots = document.querySelectorAll(".obj-slot");
+        if(record.objectives) {
+            record.objectives.forEach((obj, i) => {
+                if(slots[i]) {
+                    slots[i].querySelector(".s-active").checked = true;
+                    slots[i].querySelector(".s-name").value = obj.name;
+                    slots[i].querySelector(".s-lat").value = obj.lat;
+                    slots[i].querySelector(".s-lon").value = obj.lon;
+                }
+            });
         }
-    } catch(e) { console.error("Errore caricamento."); }
+    } catch(e) { console.log("Server non pronto, uso slot vuoti"); }
 }
 
 async function startGame() {
@@ -76,9 +88,8 @@ async function sync() {
 
         if(state.isMaster && !record.game.started) {
             record.game.started = true;
-            record.game.durationMin = parseInt(document.getElementById("gameDuration").value) || 30;
-            record.game.captureSec = parseInt(document.getElementById("captureTime").value) || 180;
-            record.game.endTime = Date.now() + (record.game.durationMin * 60000);
+            record.game.endTime = Date.now() + (parseInt(document.getElementById("gameDuration").value) * 60000);
+            record.game.captureSec = parseInt(document.getElementById("captureTime").value);
             
             record.objectives = [];
             document.querySelectorAll(".obj-slot").forEach(s => {
@@ -93,9 +104,7 @@ async function sync() {
             });
         }
 
-        if(state.isMaster || state.playerMarker) {
-            await fetch(URL, { method:"PUT", headers:{"Content-Type":"application/json","X-Master-Key":SECRET_KEY}, body: JSON.stringify(record)});
-        }
+        await fetch(URL, { method:"PUT", headers:{"Content-Type":"application/json","X-Master-Key":SECRET_KEY}, body: JSON.stringify(record)});
         updateUI(record);
     } catch(e) {}
 }
@@ -103,33 +112,19 @@ async function sync() {
 function updateUI(r) {
     if(r.game.endTime) {
         const diff = r.game.endTime - Date.now();
-        if(diff > 0) {
-            const m = Math.floor(diff / 60000);
-            const s = Math.floor((diff % 60000) / 1000);
-            document.getElementById("timer").innerText = `⏱️ ${m}:${s.toString().padStart(2,'0')}`;
-        } else {
-            document.getElementById("timer").innerText = "FINE GARA";
-        }
+        const m = Math.max(0, Math.floor(diff / 60000));
+        const s = Math.max(0, Math.floor((diff % 60000) / 1000));
+        document.getElementById("timer").innerText = `⏱️ ${m}:${s.toString().padStart(2,'0')}`;
     }
-
-    const banner = document.getElementById("gameStatusBanner");
-    banner.innerText = r.game.started ? "OPERAZIONE ATTIVA" : "ATTESA MASTER";
-    banner.className = r.game.started ? "status-banner status-active" : "status-banner";
 
     activeMarkers.forEach(m => map.removeLayer(m)); activeMarkers = [];
     
-    // Squadra
-    const pList = document.getElementById("playerList"); pList.innerHTML = "";
     Object.entries(r.players || {}).forEach(([name, p]) => {
-        if(Date.now() - p.last < 15000 && p.team === state.playerTeam) {
-            pList.innerHTML += `<li>${name} <span>ONLINE</span></li>`;
-            if(name !== state.playerName) {
-                activeMarkers.push(L.circleMarker([p.lat, p.lon], {radius:7, color: p.team==='RED'?'red':'cyan', fillOpacity:1}).addTo(map));
-            }
+        if(Date.now() - p.last < 15000 && p.team === state.playerTeam && name !== state.playerName) {
+            activeMarkers.push(L.circleMarker([p.lat, p.lon], {radius:6, color: p.team==='RED'?'red':'cyan', fillOpacity:1}).addTo(map));
         }
     });
 
-    // Obiettivi
     const sb = document.getElementById("scoreboard"); sb.innerHTML = "";
     (r.objectives || []).forEach(obj => {
         sb.innerHTML += `<li>${obj.name}: ${obj.owner}</li>`;
@@ -137,19 +132,16 @@ function updateUI(r) {
     });
 }
 
-async function resetBin() { 
-    if(!confirm("TERMINARE PARTITA? (GLI OBIETTIVI CARICATI RIMANGONO)")) return;
-    try {
-        const res = await fetch(`${URL}/latest`, { headers: {"X-Master-Key":SECRET_KEY}});
-        const { record } = await res.json();
-        record.game.started = false;
-        record.game.endTime = null;
-        record.players = {};
-        await fetch(URL, { method:"PUT", headers:{"Content-Type":"application/json","X-Master-Key":SECRET_KEY}, body: JSON.stringify(record)});
-        location.reload();
-    } catch(e) { alert("Errore Reset"); }
+async function resetBin() {
+    if(!confirm("RESET?")) return;
+    const res = await fetch(`${URL}/latest`, { headers: {"X-Master-Key":SECRET_KEY}});
+    const { record } = await res.json();
+    record.game.started = false; record.players = {}; record.game.endTime = null;
+    await fetch(URL, { method:"PUT", headers:{"Content-Type":"application/json","X-Master-Key":SECRET_KEY}, body: JSON.stringify(record)});
+    location.reload();
 }
 
 function reloadMap() { map.invalidateSize(); }
 function centerMap() { if(state.playerMarker) map.setView(state.playerMarker.getLatLng(), 18); }
-window.onload = initMap;
+
+window.onload = () => { initMap(); createEmptySlots(); };
