@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>REMONDO SIX - TACTICAL</title>
+    <title>REMONDO SIX</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <header>
         <h1>🎯 REMONDO SIX</h1>
-        <div id="gameStatusBanner" class="status-banner">SISTEMA OFFLINE</div>
+        <div id="gameStatusBanner" class="status-banner">SISTEMA PRONTO</div>
     </header>
 
     <div id="menu">
@@ -23,26 +23,26 @@
         <div class="master-zone">
             <input id="masterPass" type="password" placeholder="PASSWORD MASTER" oninput="checkMasterPass()">
             
-            <div id="masterTools" style="display:none;">
+            <div id="masterTools" style="display:none; border: 1px dashed #00ff00; padding: 10px; margin-top: 10px; background: #001100;">
                 <div class="m-config-grid">
                     <div class="m-row">
                         <label>DURATA GARA (MIN):</label>
                         <input id="gameDuration" type="number" value="30">
                     </div>
                     <div class="m-row">
-                        <label>TEMPO CATTURA (SEC):</label>
+                        <label>CATTURA (SEC):</label>
                         <input id="captureTime" type="number" value="180">
                     </div>
                 </div>
 
-                <p style="font-size:0.7rem; color:yellow; margin:10px 0 5px 0;">CONFIGURAZIONE 10 OBIETTIVI:</p>
+                <p style="font-size:0.7rem; color:yellow; margin:10px 0 5px 0;">10 OBIETTIVI EDITABILI:</p>
                 <div id="objSlotContainer" class="slot-list">
                     </div>
                 
-                <button class="btn-danger" onclick="resetBin()">🔥 RESET PARTITA (MANTIENE OBJ)</button>
+                <button class="btn-danger" onclick="resetBin()">🔥 RESET (MANTIENE OBJ)</button>
             </div>
         </div>
-        <button id="mainBtn" onclick="startGame()">▶ AVVIA / ENTRA IN PARTITA</button>
+        <button id="mainBtn" onclick="startGame()">▶ ENTRA IN PARTITA</button>
     </div>
 
     <div id="game-ui" style="display:none;">
@@ -56,7 +56,7 @@
         </div>
 
         <div class="info-section">
-            <h3>📍 STATO OBIETTIVI</h3>
+            <h3>📍 OBIETTIVI</h3>
             <ul id="scoreboard"></ul>
         </div>
         <div class="info-section">
