@@ -1,23 +1,27 @@
 * { box-sizing: border-box; outline: none; }
-body { background: #0a0a0a; color: #00ff00; font-family: monospace; margin: 0; padding: 10px; text-transform: uppercase; text-align: center; }
-.status-banner { background: #111; padding: 10px; border: 1px solid #444; margin: 10px 0; font-size: 0.8rem; }
-.status-active { background: #440000; color: #ff0000; border-color: #ff0000; animation: blink 2s infinite; }
-@keyframes blink { 50% { opacity: 0.5; } }
+body { background: #000; color: #00ff00; font-family: monospace; margin: 0; padding: 10px; text-transform: uppercase; text-align: center; }
 
 #menu { background: #111; padding: 15px; border: 1px solid #333; display: flex; flex-direction: column; gap: 10px; }
 input, select, button { background: #1a1a1a; border: 1px solid #00ff00; color: #00ff00; padding: 12px; font-size: 0.9rem; width: 100%; border-radius: 4px; }
 
-.m-row { display: flex; gap: 5px; align-items: center; margin-bottom: 5px; }
-.slot-list { display: flex; flex-direction: column; gap: 5px; margin: 10px 0; max-height: 150px; overflow-y: auto; text-align: left; }
-.obj-slot { display: grid; grid-template-columns: 30px 1fr 1fr 1fr; gap: 4px; background: #222; padding: 5px; border: 1px solid #333; }
-.obj-slot input { padding: 3px; font-size: 0.7rem; border: none; background: #111; }
+.map-outer { 
+    position: relative; width: 100%; height: 400px; 
+    border: 2px solid #00ff00; border-radius: 10px; 
+    margin: 10px 0; background: #222; overflow: hidden;
+}
+#map { width: 100%; height: 100%; z-index: 1; }
 
-.map-outer { position: relative; width: 100%; height: 400px; border: 2px solid #00ff00; border-radius: 10px; overflow: hidden; margin: 10px 0; background: #000; }
-#map { width: 100%; height: 100%; }
-.map-btn { position: absolute; z-index: 1000; background: rgba(0,0,0,0.85); border: 2px solid #00ff00; color: #00ff00; width: 50px; height: 50px; font-size: 1.4rem; cursor: pointer; }
+.map-btn { 
+    position: absolute; z-index: 1000; background: rgba(0,0,0,0.8); 
+    border: 2px solid #00ff00; color: #00ff00; width: 44px; height: 44px; 
+}
 .btn-gps { top: 10px; right: 10px; }
 .btn-reload { bottom: 10px; right: 10px; }
 
-.info-section { text-align: left; background: #111; padding: 10px; border: 1px solid #222; margin-top: 10px; border-radius: 5px; }
-li { font-size: 0.8rem; padding: 6px 0; border-bottom: 1px solid #222; display: flex; justify-content: space-between; }
-.btn-danger { border: 1px solid red; color: red; margin-top: 15px; background: #200; }
+.status-banner { background: #111; padding: 10px; border: 1px solid #444; margin-bottom: 10px; }
+.status-active { color: #ff0000; border-color: #ff0000; animation: blink 2s infinite; }
+@keyframes blink { 50% { opacity: 0.5; } }
+
+.info-section { text-align: left; background: #111; padding: 10px; border: 1px solid #222; margin-top: 10px; }
+li { display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid #222; font-size: 0.8rem; }
+.btn-danger { color: red; border-color: red; margin-top: 15px; }
