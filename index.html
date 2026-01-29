@@ -20,7 +20,6 @@
             <option value="RED">TEAM ROSSO</option>
             <option value="BLUE">TEAM BLU</option>
         </select>
-
         <div class="master-zone">
             <label><input type="checkbox" id="isMaster" onchange="toggleMasterTools()"> MASTER MODE</label>
             <div id="masterTools" style="display:none;">
@@ -29,8 +28,7 @@
                 <div id="objSlotContainer" class="slot-container"></div>
             </div>
         </div>
-
-        <button class="btn-main" onclick="startGame()">▶ AVVIA / ENTRA</button>
+        <button onclick="startGame()">▶ AVVIA / ENTRA</button>
     </div>
 
     <div id="game-ui" style="display:none;">
@@ -52,11 +50,6 @@
         <div class="info-section">
             <h3>📍 OBIETTIVI (CONQUISTA: 3 MIN)</h3>
             <ul id="scoreboard"></ul>
-        </div>
-
-        <div class="info-section">
-            <h3>👥 COMPAGNI ONLINE</h3>
-            <ul id="operators"></ul>
         </div>
     </div>
 
