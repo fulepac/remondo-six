@@ -1,26 +1,26 @@
 * { box-sizing: border-box; outline: none; }
-body { background: #0a0a0a; color: #00ff00; font-family: monospace; margin: 0; padding: 10px; text-transform: uppercase; }
-.status-banner { background: #222; padding: 10px; border: 1px solid #444; margin-bottom: 10px; text-align: center; }
-#menu { background: #111; padding: 15px; border: 1px solid #333; display: flex; flex-direction: column; gap: 8px; }
+body { background: #0a0a0a; color: #00ff00; font-family: monospace; margin: 0; padding: 10px; text-transform: uppercase; text-align: center; }
+.status-banner { background: #222; padding: 10px; border: 1px solid #444; margin: 10px 0; font-size: 0.8rem; }
+#menu { background: #111; padding: 15px; border: 1px solid #333; display: flex; flex-direction: column; gap: 10px; }
 input, select, button { background: #1a1a1a; border: 1px solid #00ff00; color: #00ff00; padding: 12px; border-radius: 5px; width: 100%; font-weight: bold; }
+.btn-danger { border-color: #ff0000; color: #ff0000; margin-top: 10px; }
 
-/* MAPPA */
-.map-outer { position: relative; width: 100%; height: 450px; border: 2px solid #00ff00; border-radius: 10px; overflow: hidden; background: #000; }
-#map-rotate-wrapper { width: 100%; height: 100%; }
+/* MAPPA E ROTAZIONE */
+.map-outer { position: relative; width: 100%; height: 400px; border: 2px solid #00ff00; border-radius: 10px; overflow: hidden; background: #000; margin: 10px 0; }
+#map-rotate-wrapper { width: 100%; height: 100%; transition: transform 0.1s linear; }
 #map { width: 100%; height: 100%; }
 
-/* Tasti fissi sulla mappa */
-.btn-map-fixed { position: absolute; z-index: 2000; background: rgba(0,0,0,0.85); border: 2px solid #00ff00; color: #00ff00; width: 50px; height: 50px; border-radius: 8px; font-size: 1.5rem; display: flex; align-items: center; justify-content: center; cursor: pointer; }
-.btn-top-right { top: 10px; right: 10px; }
-.btn-bottom-right { bottom: 10px; right: 10px; }
+/* PULSANTI MAPPA */
+.map-btn { position: absolute; z-index: 1000; background: rgba(0,0,0,0.8); border: 2px solid #00ff00; color: #00ff00; width: 45px; height: 45px; border-radius: 5px; font-size: 1.2rem; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+.btn-gps { top: 10px; right: 10px; }
+.btn-reload { bottom: 10px; right: 10px; }
 
-#compass-ui { position: absolute; bottom: 10px; left: 10px; z-index: 2000; width: 50px; height: 50px; background: rgba(0,0,0,0.85); border: 2px solid #00ff00; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+#compass-ui { position: absolute; bottom: 10px; left: 10px; z-index: 1000; width: 45px; height: 45px; background: rgba(0,0,0,0.8); border: 2px solid #00ff00; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
 #compass-needle { color: red; font-weight: bold; }
 
-#radar { width: 110px; height: 110px; border: 2px solid #00ff00; border-radius: 50%; position: fixed; bottom: 80px; right: 10px; z-index: 1500; background: rgba(0,30,0,0.4); overflow: hidden; pointer-events: none; }
-.dot { position: absolute; width: 8px; height: 8px; border-radius: 50%; transform: translate(-50%, -50%); }
-.dot.RED { background: red; box-shadow: 0 0 5px red; }
-.dot.BLUE { background: cyan; box-shadow: 0 0 5px cyan; }
+#radar { width: 100px; height: 100px; border: 2px solid #00ff00; border-radius: 50%; position: fixed; bottom: 70px; right: 10px; z-index: 999; background: rgba(0,20,0,0.3); pointer-events: none; overflow: hidden; }
+.dot { position: absolute; width: 6px; height: 6px; border-radius: 50%; transform: translate(-50%, -50%); }
+.dot.RED { background: red; } .dot.BLUE { background: cyan; }
 
-.info-section { background: #111; padding: 10px; margin-top: 10px; border: 1px solid #222; text-align: left; }
-li { padding: 8px 0; border-bottom: 1px solid #222; font-size: 0.85rem; }
+.info-section { text-align: left; background: #111; padding: 10px; border: 1px solid #222; margin-top: 10px; }
+li { padding: 5px 0; border-bottom: 1px solid #222; font-size: 0.8rem; }
