@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>REMONDO SIX</title>
+    <title>REMONDO SIX - TACTICAL</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <header>
         <h1>🎯 REMONDO SIX</h1>
-        <div id="statusBanner" class="status-banner">SINCRO...</div>
+        <div id="gameStatusBanner" class="status-banner">CONTROLLO SERVER...</div>
     </header>
 
     <div id="menu">
@@ -20,25 +20,45 @@
             <option value="BLUE">TEAM BLU</option>
         </select>
 
-        <div style="border:1px solid #444; padding:10px; margin:10px 0;">
-            <label>
-                <input type="checkbox" id="isMaster" onchange="toggleMasterTools()"> MASTER MODE
-            </label>
-            <div id="masterTools" style="display:none; margin-top:10px;">
+        <div class="master-zone">
+            <label><input type="checkbox" id="isMaster" onchange="toggleMasterTools()"> MASTER MODE</label>
+            <div id="masterTools" style="display:none;">
                 <input id="masterPass" type="password" placeholder="PASSWORD MASTER">
-                <hr>
-                <div id="objSlotContainer"></div>
+                <input id="gameDuration" type="number" placeholder="DURATA (MIN)" value="30">
+                <div class="obj-manager">
+                    <h4>📍 GESTIONE 10 SLOT OBIETTIVI</h4>
+                    <div id="objSlotContainer" class="slot-container"></div>
+                </div>
             </div>
         </div>
-
-        <button onclick="startGame()" style="background:#004400; font-weight:bold;">▶ ENTRA IN PARTITA</button>
+        <button class="btn-main" onclick="startGame()">▶ AVVIA / ENTRA</button>
     </div>
 
     <div id="game-ui" style="display:none;">
+        <div id="timer">⏱️ --:--</div>
+        <div id="score">🔴 0 | 🔵 0</div>
+        
         <div class="map-outer">
-            <div id="map"></div>
+            <div id="map-rotate-wrapper">
+                <div id="map"></div>
+            </div>
+            <div id="compass-ui"><div id="compass-needle">N</div></div>
+            <button onclick="centerMap()" class="btn-center">🎯</button>
         </div>
-        <div id="scoreboard" style="text-align:left; padding:10px;"></div>
+
+        <div class="info-section">
+            <h3>📍 OBIETTIVI ATTIVI</h3>
+            <ul id="scoreboard"></ul>
+        </div>
+        <div class="info-section">
+            <h3>👥 COMPAGNI ONLINE</h3>
+            <ul id="operators"></ul>
+        </div>
+    </div>
+
+    <div id="radar"></div>
+    <div id="master-controls" style="display:none;">
+        <button class="btn-danger" onclick="resetBin()">🔥 RESET COMPLETO PARTITA</button>
     </div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
