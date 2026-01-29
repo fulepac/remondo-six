@@ -20,6 +20,30 @@ function checkMasterPass() {
     }
 }
 
+// Inizializza gli slot nel menu Master ma carica i valori dal server se esistono
+async function loadCurrentConfig() {
+    try {
+        const res = await fetch(`${URL}/latest`, { headers: {"X-Master-Key":SECRET_KEY}});
+        const { record } = await res.json();
+        
+        const container = document.getElementById("objSlotContainer");
+        container.innerHTML = "";
+        
+        // Se ci sono già obiettivi sul server, usa quelli, altrimenti i default
+        const list = (record.objectives && record.objectives.length > 0) ? record.objectives : 
+                     [{name:"PF1", lat:45.238376, lon:8.810060}, {name:"PF2", lat:45.237648, lon:8.810941}, {name:"PF3", lat:45.238634, lon:8.808772}];
+
+        list.forEach((obj, i) => {
+            container.innerHTML += `<div class="obj-slot" style="display:flex; gap:2px; margin-bottom:2px;">
+                <input type="checkbox" class="s-active" checked>
+                <input type="text" class="s-name" value="${obj.name}" style="width:50px; font-size:10px;">
+                <input type="text" class="s-lat" value="${obj.lat}" style="font-size:10px;">
+                <input type="text" class="s-lon" value="${obj.lon}" style="font-size:10px;">
+            </div>`;
+        });
+    } catch(e) { console.log("Errore caricamento config"); }
+}
+
 async function startGame() {
     state.playerName = document.getElementById("playerName").value.trim().toUpperCase();
     state.playerTeam = document.getElementById("teamSelect").value;
@@ -28,16 +52,14 @@ async function startGame() {
     document.getElementById("menu").style.display = "none";
     document.getElementById("game-ui").style.display = "block";
 
-    // Fix fondamentale per far apparire la mappa e far partire il tempo
     setTimeout(() => {
         map.invalidateSize();
         navigator.geolocation.getCurrentPosition(p => {
             const pos = [p.coords.latitude, p.coords.longitude];
             map.setView(pos, 18);
             state.playerMarker = L.marker(pos).addTo(map).bindTooltip("IO", {permanent:true});
-            sync(); // Prima sincronizzazione forzata
-        }, () => alert("GPS NECESSARIO"), {enableHighAccuracy:true});
-    }, 500);
+        }, null, {enableHighAccuracy:true});
+    }, 600);
 
     setInterval(sync, 4000);
 }
@@ -47,17 +69,33 @@ async function sync() {
         const res = await fetch(`${URL}/latest`, { headers: {"X-Master-Key":SECRET_KEY}, cache:'no-store'});
         const { record } = await res.json();
         
+        // Mantieni sempre i giocatori aggiornati
         if(state.playerMarker) {
+            if(!record.players) record.players = {};
             record.players[state.playerName] = {
                 team: state.playerTeam, lat: state.playerMarker.getLatLng().lat, lon: state.playerMarker.getLatLng().lng, last: Date.now()
             };
         }
 
+        // Se il Master clicca Avvia, carica i nuovi dati dagli slot, altrimenti mantiene quelli vecchi
         if(state.isMaster && !record.game.started) {
             record.game.started = true;
-            record.game.start = Date.now(); // Fissa l'inizio tempo
+            record.game.durationMin = parseInt(document.getElementById("gameDuration").value) || 30;
+            record.game.endTime = Date.now() + (record.game.durationMin * 60000);
             record.game.score = {RED:0, BLUE:0};
-            record.objectives = [{name:"ALPHA", lat:state.playerMarker.getLatLng().lat + 0.0002, lon:state.playerMarker.getLatLng().lng, owner:"LIBERO"}];
+            
+            // Aggiorna gli obiettivi solo se il Master ha modificato gli slot e preme Avvia
+            record.objectives = [];
+            document.querySelectorAll(".obj-slot").forEach(s => {
+                if(s.querySelector(".s-active").checked) {
+                    record.objectives.push({
+                        name: s.querySelector(".s-name").value,
+                        lat: parseFloat(s.querySelector(".s-lat").value),
+                        lon: parseFloat(s.querySelector(".s-lon").value),
+                        owner: "LIBERO"
+                    });
+                }
+            });
         }
 
         if(state.isMaster || state.playerMarker) {
@@ -68,41 +106,53 @@ async function sync() {
 }
 
 function updateUI(r) {
-    // Gestione Timer
-    if(r.game.start) {
-        const diff = Math.floor((Date.now() - r.game.start) / 1000);
-        const m = Math.floor(diff / 60);
-        const s = diff % 60;
-        document.getElementById("timer").innerText = `⏱️ ${m}:${s.toString().padStart(2,'0')}`;
+    // Gestione Countdown
+    if(r.game.endTime) {
+        const diff = r.game.endTime - Date.now();
+        if(diff > 0) {
+            const m = Math.floor(diff / 60000);
+            const s = Math.floor((diff % 60000) / 1000);
+            document.getElementById("timer").innerText = `⏱️ ${m}:${s.toString().padStart(2,'0')}`;
+        } else {
+            document.getElementById("timer").innerText = "FINE TEMPO";
+        }
     }
 
-    const banner = document.getElementById("gameStatusBanner");
-    banner.innerText = r.game.started ? "OPERAZIONE ATTIVA" : "SISTEMA PRONTO";
-    banner.className = r.game.started ? "status-banner status-active" : "status-banner";
-
-    // Pulisci e disegna
     objMarkers.forEach(m => map.removeLayer(m)); objMarkers = [];
     
-    // Squadra
-    const pList = document.getElementById("playerList"); pList.innerHTML = "";
-    Object.entries(r.players).forEach(([name, p]) => {
-        if(Date.now() - p.last < 15000 && p.team === state.playerTeam) {
-            pList.innerHTML += `<li>${name} <span>ONLINE</span></li>`;
-            if(name !== state.playerName) {
-                objMarkers.push(L.circleMarker([p.lat, p.lon], {radius:7, color: p.team==='RED'?'red':'cyan', fillOpacity:1}).addTo(map));
-            }
+    // Disegna Compagni
+    Object.entries(r.players || {}).forEach(([name, p]) => {
+        if(Date.now() - p.last < 15000 && p.team === state.playerTeam && name !== state.playerName) {
+            objMarkers.push(L.circleMarker([p.lat, p.lon], {radius:7, color: p.team==='RED'?'red':'cyan', fillOpacity:1}).addTo(map));
         }
     });
 
-    // Obiettivi
+    // Disegna Obiettivi (sempre persistenti)
     const sb = document.getElementById("scoreboard"); sb.innerHTML = "";
-    r.objectives.forEach(obj => {
+    (r.objectives || []).forEach(obj => {
         sb.innerHTML += `<li>${obj.name}: ${obj.owner}</li>`;
         objMarkers.push(L.circle([obj.lat, obj.lon], {radius:15, color: obj.owner==='RED'?'red':obj.owner==='BLUE'?'cyan':'white'}).addTo(map));
     });
 }
 
+async function resetBin() { 
+    if(!confirm("TERMINARE LA PARTITA? (GLI OBIETTIVI CARICATI NON VERRANNO CANCELLATI)")) return;
+    try {
+        const res = await fetch(`${URL}/latest`, { headers: {"X-Master-Key":SECRET_KEY}});
+        const { record } = await res.json();
+        record.game.started = false;
+        record.game.endTime = null;
+        record.players = {};
+        // NON azzeriamo record.objectives, così rimangono quelli caricati dall'app
+        await fetch(URL, { method:"PUT", headers:{"Content-Type":"application/json","X-Master-Key":SECRET_KEY}, body: JSON.stringify(record)});
+        location.reload();
+    } catch(e) { alert("Errore Reset"); }
+}
+
 function reloadMap() { map.invalidateSize(); }
 function centerMap() { if(state.playerMarker) map.setView(state.playerMarker.getLatLng(), 18); }
-async function resetBin() { if(confirm("RESET TOTALE?")) { await fetch(URL, {method:"PUT", headers:{"Content-Type":"application/json","X-Master-Key":SECRET_KEY}, body: JSON.stringify({game:{started:false}, players:{}, objectives:[]})}); location.reload(); }}
-window.onload = initMap;
+
+window.onload = () => { 
+    initMap(); 
+    loadCurrentConfig(); 
+};
