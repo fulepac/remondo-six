@@ -4,7 +4,7 @@ const URL = `https://api.jsonbin.io/v3/b/${BIN_ID}`;
 
 let state = { isMaster: false, playerName: "", playerTeam: "", playerMarker: null };
 let activeMarkers = [];
-let allyMarkers = {}; // Gestione icone compagni
+let allyMarkers = {}; 
 let lastObjOwners = {};
 
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -53,7 +53,7 @@ async function startGame() {
     state.playerName = document.getElementById("playerName").value.trim().toUpperCase();
     state.playerTeam = document.getElementById("teamSelect").value;
     state.isMaster = document.getElementById("isMaster").checked;
-    if(!state.playerName) return alert("NOME OPERATORE?");
+    if(!state.playerName) return alert("INSERISCI NOME");
     if(audioCtx.state === 'suspended') audioCtx.resume();
 
     if(window.DeviceOrientationEvent && typeof DeviceOrientationEvent.requestPermission === 'function') {
@@ -110,7 +110,9 @@ async function sync() {
         
         const banner = document.getElementById("gameStatusBanner");
         if(record.game.started) { banner.innerText = "PARTITA IN CORSO"; banner.className = "status-banner status-active"; }
+        else { banner.innerText = "SISTEMA PRONTO - ATTESA"; banner.className = "status-banner"; }
         
+        if(!record.players) record.players = {};
         record.players[state.playerName] = { team: state.playerTeam, lat: state.playerMarker.getLatLng().lat, lon: state.playerMarker.getLatLng().lng, last: Date.now() };
         
         if(state.isMaster) {
@@ -130,23 +132,20 @@ function updateUI(r) {
     const t2 = r.game.teamNames?.BLUE || "BLUE";
     document.getElementById("score").innerHTML = `🔴 ${t1}: ${r.game.score.RED} | 🔵 ${t2}: ${r.game.score.BLUE}`;
     
-    // Lista Compagni e Radar (Solo stessa squadra)
     const pList = document.getElementById("playerList"); pList.innerHTML = "";
     const rad = document.getElementById("radar"); rad.innerHTML = "";
     const myPos = state.playerMarker.getLatLng();
 
     Object.entries(r.players).forEach(([name, p]) => {
         if(Date.now() - p.last < 15000) {
+            // MOSTRA SOLO COMPAGNI
             if(p.team === state.playerTeam) {
-                // Lista testuale
                 pList.innerHTML += `<li><span>${name}</span> <span style="color:${p.team==='RED'?'red':'cyan'}">ONLINE</span></li>`;
                 
-                // Marker su Mappa (escluso se stesso)
                 if(name !== state.playerName) {
                     if(!allyMarkers[name]) allyMarkers[name] = L.circleMarker([p.lat, p.lon], {radius:6, color: p.team==='RED'?'red':'cyan', fillOpacity:1}).addTo(map).bindTooltip(name, {permanent:true});
                     else allyMarkers[name].setLatLng([p.lat, p.lon]);
 
-                    // Radar
                     const d = getDist(myPos.lat, myPos.lng, p.lat, p.lon);
                     if(d < 100) {
                         const dot = document.createElement("div"); dot.className = "dot "+p.team;
@@ -155,7 +154,6 @@ function updateUI(r) {
                     }
                 }
             } else {
-                // Se è un nemico, rimuovi eventuale marker se esisteva (sicurezza)
                 if(allyMarkers[name]) { map.removeLayer(allyMarkers[name]); delete allyMarkers[name]; }
             }
         } else {
@@ -166,8 +164,8 @@ function updateUI(r) {
     const sb = document.getElementById("scoreboard"); sb.innerHTML = "";
     activeMarkers.forEach(m => map.removeLayer(m)); activeMarkers = [];
     r.objectives.forEach(obj => {
-        if(lastObjectiveOwners[obj.name] && lastObjectiveOwners[obj.name] !== obj.owner) beep();
-        lastObjectiveOwners[obj.name] = obj.owner;
+        if(lastObjOwners[obj.name] && lastObjOwners[obj.name] !== obj.owner) beep();
+        lastObjOwners[obj.name] = obj.owner;
         let label = obj.owner === "LIBERO" ? "LIBERO" : (obj.owner === "RED" ? t1 : t2);
         if(obj.teamConquering) label = `CATTURA: ${obj.teamConquering==='RED'?t1:t2}`;
         sb.innerHTML += `<li>${obj.name}: <strong>${label}</strong></li>`;
