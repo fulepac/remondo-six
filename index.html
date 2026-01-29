@@ -22,32 +22,38 @@
 
         <div class="master-zone">
             <input id="masterPass" type="password" placeholder="PASSWORD MASTER" oninput="checkMasterPass()">
-            <div id="masterTools" style="display:none; border: 1px dashed #00ff00; padding: 10px; margin-top: 10px; background: #001100;">
+            <div id="masterTools" style="display:none;">
                 <div class="m-config-grid">
                     <div class="m-row"><label>DURATA (MIN):</label><input id="gameDuration" type="number" value="30"></div>
                     <div class="m-row"><label>CATTURA (SEC):</label><input id="captureTime" type="number" value="180"></div>
                 </div>
-                <p style="font-size:0.7rem; color:yellow; margin:10px 0 5px 0;">10 OBIETTIVI EDITABILI:</p>
+                <p style="color:yellow; font-size:0.7rem; margin:10px 0 5px 0;">CONFIGURA 10 OBIETTIVI:</p>
                 <div id="objSlotContainer" class="slot-list"></div>
                 <button class="btn-danger" onclick="resetBin()">🔥 RESET PARTITA</button>
             </div>
         </div>
-        <button id="mainBtn" onclick="enableSensorsAndStart()">▶ ATTIVA BUSSOLA E ENTRA</button>
+        <button id="mainBtn" class="btn-start" onclick="enableSensorsAndStart()">▶ ATTIVA BUSSOLA E ENTRA</button>
     </div>
 
     <div id="game-ui" style="display:none;">
         <div id="timer" class="countdown-display">⏱️ --:--</div>
+        
         <div class="map-outer">
-            <div id="map-rotate">
-                <div id="map"></div>
-            </div>
+            <div id="map-rotate"><div id="map"></div></div>
             <div id="player-pointer">▲</div>
             <button onclick="centerMap()" class="map-btn btn-gps">🎯</button>
             <button onclick="reloadMap()" class="map-btn btn-reload">🔄</button>
         </div>
-        <div class="info-section">
-            <div id="score">🔴 0 | 🔵 0</div>
-            <ul id="scoreboard"></ul>
+
+        <div class="game-info-container">
+            <div class="info-section">
+                <h3>📍 OBIETTIVI</h3>
+                <ul id="scoreboard" class="data-list"></ul>
+            </div>
+            <div class="info-section">
+                <h3>👥 SQUADRA</h3>
+                <ul id="playerList" class="data-list"></ul>
+            </div>
         </div>
     </div>
 
