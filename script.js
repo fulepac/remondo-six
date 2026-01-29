@@ -6,7 +6,7 @@ let state = { isMaster: false, playerName: "", playerTeam: "", playerMarker: nul
 let allyMarkers = {}; 
 let activeObjMarkers = [];
 let lastObjStatus = {}; 
-const CONQUER_TIME = 180000; // 3 minuti in millisecondi
+const CONQUER_TIME = 180000; // 3 minuti
 
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 function playSound(freq, duration) {
@@ -49,29 +49,35 @@ function initSlotUI() {
 
 window.onload = () => { initSlotUI(); checkStatus(); };
 
-// Mappa Satellitare Dettagliata (Esri)
-const map = L.map("map", { rotate: true, touchRotate: true }).setView([45.237763, 8.809708], 18);
+// Inizializzazione Mappa con supporto Rotazione
+const map = L.map("map", { 
+    rotate: true, 
+    touchRotate: true,
+    bearing: 0 
+}).setView([45.237763, 8.809708], 18);
+
 L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-    attribution: 'Tiles &copy; Esri'
+    attribution: 'Esri Satellite'
 }).addTo(map);
 
-// Gestione Bussola
+// Funzione Gestione Bussola e Rotazione Mappa
 function initCompass() {
     if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
         DeviceOrientationEvent.requestPermission()
             .then(response => { if (response === 'granted') window.addEventListener('deviceorientation', handleOrientation); })
-            .catch(console.error);
+            .catch(e => console.error("Permesso Sensori Negato"));
     } else {
         window.addEventListener('deviceorientation', handleOrientation);
     }
 }
 
 function handleOrientation(event) {
-    let compass = event.webkitCompassHeading || (360 - event.alpha);
-    if (compass) {
-        document.getElementById("compass-arrow").style.transform = `rotate(${compass}deg)`;
-        // Opzionale: ruota la mappa col giocatore
-        // map.setBearing(compass); 
+    let heading = event.webkitCompassHeading || (360 - event.alpha);
+    if (heading) {
+        // Ruota l'icona della bussola
+        document.getElementById("compass-arrow").style.transform = `rotate(${heading}deg)`;
+        // Ruota l'intera mappa per seguire la direzione del giocatore
+        map.setBearing(-heading); 
     }
 }
 
@@ -153,7 +159,6 @@ function processLogic(r) {
         const nearby = Object.values(r.players).filter(p => (Date.now()-p.last < 10000) && getDist(obj.lat, obj.lon, p.lat, p.lon) < 15);
         const teamsPresent = [...new Set(nearby.map(p => p.team))];
 
-        // Se c'è solo un team nell'area e non è il proprietario
         if(teamsPresent.length === 1 && teamsPresent[0] !== obj.owner) {
             if(obj.teamConquering !== teamsPresent[0]) {
                 obj.start = Date.now();
@@ -164,7 +169,6 @@ function processLogic(r) {
                 obj.start = null;
             }
         } else if (teamsPresent.length !== 1) {
-            // Se l'area è contesa o vuota, il timer si resetta
             obj.teamConquering = null;
             obj.start = null;
         }
@@ -189,20 +193,13 @@ function updateUI(r) {
         const col = obj.owner === "RED" ? "red" : obj.owner === "BLUE" ? "#00ffff" : "white";
         let status = obj.owner;
         
-        if(obj.teamConquering && !lastObjStatus[obj.name+"_conq"]) { 
-            playSound(440, 0.2); 
-            lastObjStatus[obj.name+"_conq"] = true; 
-        }
+        if(obj.teamConquering && !lastObjStatus[obj.name+"_conq"]) { playSound(440, 0.2); lastObjStatus[obj.name+"_conq"] = true; }
         if(!obj.teamConquering) lastObjStatus[obj.name+"_conq"] = false;
-
-        if(obj.owner !== lastObjStatus[obj.name+"_owner"]) {
-            if(lastObjStatus[obj.name+"_owner"]) playSound(880, 0.8);
-            lastObjStatus[obj.name+"_owner"] = obj.owner;
-        }
+        if(obj.owner !== lastObjStatus[obj.name+"_owner"]) { if(lastObjStatus[obj.name+"_owner"]) playSound(880, 0.8); lastObjStatus[obj.name+"_owner"] = obj.owner; }
 
         if(obj.teamConquering) {
             const progress = Math.floor((Date.now()-obj.start)/1000);
-            status = `INVASIONE ${obj.teamConquering} (${progress}/180s)`;
+            status = `ATTACCO ${obj.teamConquering} (${progress}/180s)`;
         }
         
         sb.innerHTML += `<li style="border-left:5px solid ${col}">${obj.name}: ${status}</li>`;
@@ -214,11 +211,7 @@ function updateUI(r) {
     const myPos = state.playerMarker.getLatLng();
 
     Object.entries(r.players).forEach(([name, p]) => {
-        if(Date.now()-p.last > 20000) { 
-            if(allyMarkers[name]) {map.removeLayer(allyMarkers[name]); delete allyMarkers[name];} 
-            return; 
-        }
-        
+        if(Date.now()-p.last > 20000) { if(allyMarkers[name]) {map.removeLayer(allyMarkers[name]); delete allyMarkers[name];} return; }
         if(p.team === state.playerTeam) {
             opList.innerHTML += `<li><span style="color:${p.team==='RED'?'red':'#00ffff'}">●</span> ${name}</li>`;
             if(name !== state.playerName) {
@@ -226,7 +219,6 @@ function updateUI(r) {
                 else allyMarkers[name].setLatLng([p.lat, p.lon]);
             }
         }
-
         if(name !== state.playerName) {
             const d = getDist(myPos.lat, myPos.lng, p.lat, p.lon);
             if(d < 100) {
@@ -239,9 +231,4 @@ function updateUI(r) {
     });
 }
 
-async function resetBin() { 
-    if(confirm("RESET TOTALE?")) { 
-        await fetch(JSONBIN_URL, {method:"PUT", headers:{"Content-Type":"application/json","X-Master-Key":SECRET_KEY}, body: JSON.stringify({game:{started:false}, players:{}, objectives:[]})}); 
-        location.reload(); 
-    } 
-}
+async function resetBin() { if(confirm("RESET TOTALE?")) { await fetch(JSONBIN_URL, {method:"PUT", headers:{"Content-Type":"application/json","X-Master-Key":SECRET_KEY}, body: JSON.stringify({game:{started:false}, players:{}, objectives:[]})}); location.reload(); } }
