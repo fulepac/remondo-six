@@ -27,13 +27,7 @@
             <div id="masterTools" style="display:none;">
                 <input id="masterPass" type="password" placeholder="PASSWORD MASTER">
                 <input id="gameDuration" type="number" placeholder="DURATA (MIN)" value="30">
-                
-                <div class="obj-manager">
-                    <h4>📍 GESTIONE 10 SLOT OBIETTIVI</h4>
-                    <p style="font-size:0.6rem; color:#888;">Seleziona e modifica gli obiettivi attivi:</p>
-                    <div id="objSlotContainer" class="slot-container">
-                        </div>
-                </div>
+                <div id="objSlotContainer" class="slot-container"></div>
             </div>
         </div>
 
@@ -45,12 +39,17 @@
         <div id="score">🔴 0 | 🔵 0</div>
         
         <div class="map-container">
+            <div id="compass-ui">
+                <svg id="compass-arrow" viewBox="0 0 100 100">
+                    <polygon points="50,5 95,95 50,75 5,95" fill="red"/>
+                </svg>
+            </div>
             <button onclick="centerMap()" class="btn-center">🎯 CENTRA</button>
             <div id="map"></div>
         </div>
 
         <div class="info-section">
-            <h3>📍 OBIETTIVI ATTIVI</h3>
+            <h3>📍 OBIETTIVI (CONQUISTA: 3 MIN)</h3>
             <ul id="scoreboard"></ul>
         </div>
 
@@ -65,6 +64,11 @@
     <div id="master-controls" style="display:none;">
         <button class="btn-danger" onclick="resetBin()">🔥 RESET COMPLETO PARTITA</button>
     </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="script.js"></script>
