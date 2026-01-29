@@ -10,7 +10,7 @@
 <body>
     <header>
         <h1>🎯 REMONDO SIX</h1>
-        <div id="gameStatusBanner" class="status-banner">SISTEMA OFFLINE</div>
+        <div id="gameStatusBanner" class="status-banner">INIZIALIZZAZIONE...</div>
     </header>
 
     <div id="menu">
@@ -22,36 +22,40 @@
 
         <div class="master-zone">
             <input id="masterPass" type="password" placeholder="PASSWORD MASTER" oninput="checkMasterPass()">
-            <div id="masterTools" style="display:none; border: 1px dashed #00ff00; padding: 10px; margin-top: 10px;">
+            <div id="masterTools" style="display:none; border: 1px dashed #00ff00; padding: 10px; margin-top: 10px; background: #001100;">
+                <p style="color:yellow; font-size:0.8rem; margin-bottom:10px;">CONFIGURAZIONE MASTER ATTIVA</p>
                 <div class="m-row">
-                    <input id="team1Name" placeholder="TEAM 1" value="ROSSI" oninput="updateLabels()">
-                    <input id="team2Name" placeholder="TEAM 2" value="BLU" oninput="updateLabels()">
+                    <input id="team1Name" placeholder="TEAM 1" value="ROSSI">
+                    <input id="team2Name" placeholder="TEAM 2" value="BLU">
                 </div>
                 <div class="m-row">
-                    <label>DURATA GARA (MIN):</label>
+                    <label style="font-size:0.7rem;">DURATA GARA (MIN):</label>
                     <input id="gameDuration" type="number" value="30" style="width:60px">
                 </div>
-                <div id="objSlotContainer" class="slot-list"></div>
-                <button class="btn-danger" onclick="resetBin()">🔥 RESET PARTITA (MANTIENE OBJ)</button>
+                <div id="objSlotContainer" class="slot-list">
+                    </div>
+                <button class="btn-danger" onclick="resetBin()">🔥 TERMINA PARTITA (MANTIENE OBJ)</button>
             </div>
         </div>
-        <button id="mainBtn" onclick="startGame()">▶ AVVIA / ENTRA</button>
+        <button id="mainBtn" onclick="startGame()">▶ AVVIA / ENTRA IN PARTITA</button>
     </div>
 
     <div id="game-ui" style="display:none;">
-        <div id="timer">⏱️ --:--</div>
+        <div id="timer" class="countdown-display">⏱️ --:--</div>
         <div id="score">🔴 0 | 🔵 0</div>
+        
         <div class="map-outer">
             <div id="map"></div>
             <button onclick="centerMap()" class="map-btn btn-gps">🎯</button>
             <button onclick="reloadMap()" class="map-btn btn-reload">🔄</button>
         </div>
+
         <div class="info-section">
-            <h3>📍 OBIETTIVI</h3>
+            <h3>📍 STATO OBIETTIVI</h3>
             <ul id="scoreboard"></ul>
         </div>
         <div class="info-section">
-            <h3>👥 SQUADRA</h3>
+            <h3>👥 COMPAGNI SQUADRA</h3>
             <ul id="playerList"></ul>
         </div>
     </div>
