@@ -10,6 +10,7 @@
 <body>
     <header id="app-header">
         <h1>🎯 SIX APP</h1>
+        <div class="credits">Creato da Fulvio Versione 30126</div>
         <div id="gameStatusBanner" class="status-banner">SISTEMA PRONTO</div>
     </header>
 
@@ -23,10 +24,12 @@
         <div class="master-zone">
             <input id="masterPass" type="password" placeholder="PASSWORD MASTER" oninput="checkMasterPass()">
             <div id="masterTools" style="display:none;">
+                <p style="color:cyan; font-size:0.7rem; margin-bottom:5px;">MODALITÀ DI GIOCO:</p>
                 <div class="mode-selector">
                     <button id="btnDomination" class="mode-btn active" onclick="setGameMode('DOMINATION')">DOMINIO</button>
                     <button id="btnRecon" class="mode-btn" onclick="setGameMode('RECON')">RECON</button>
                 </div>
+                
                 <div class="m-config-grid">
                     <div class="m-row" id="rowDuration"><label>DURATA (MIN):</label><input id="gameDuration" type="number" value="30"></div>
                     <div class="m-row"><label>CATTURA (SEC):</label><input id="captureTime" type="number" value="180"></div>
