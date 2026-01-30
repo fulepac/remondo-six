@@ -1,52 +1,56 @@
-* { box-sizing: border-box; outline: none; }
-body { background: #000; color: #00ff00; font-family: monospace; margin: 0; padding: 10px; overflow-x: hidden; }
+* { box-sizing: border-box; outline: none; -webkit-tap-highlight-color: transparent; }
+body { background: #000; color: #00ff00; font-family: monospace; margin: 0; padding: 10px; overflow: hidden; height: 100vh; }
 
-header h1 { text-align: center; font-size: 1.5rem; margin: 10px 0 0 0; letter-spacing: 2px; }
-.credits { text-align: center; font-size: 0.65rem; color: #008800; margin-bottom: 5px; }
-.status-banner { text-align: center; font-size: 0.8rem; color: #aaa; margin-bottom: 10px; }
+header h1 { text-align: center; font-size: 1.5rem; margin: 5px 0 0 0; }
+.credits { text-align: center; font-size: 0.65rem; color: #008800; margin-bottom: 10px; }
 
-#menu { background: #111; padding: 15px; border: 1px solid #333; display: flex; flex-direction: column; gap: 10px; width: 100%; }
-input, select, button { background: #1a1a1a; border: 1px solid #00ff00; color: #00ff00; padding: 12px; font-size: 0.9rem; width: 100%; border-radius: 4px; }
+#menu { background: #111; padding: 15px; border: 1px solid #333; display: flex; flex-direction: column; gap: 8px; }
+input, select, button { background: #1a1a1a; border: 1px solid #00ff00; color: #00ff00; padding: 10px; border-radius: 4px; }
 
-.mode-selector { display: flex; gap: 10px; margin-bottom: 15px; }
-.mode-btn { flex: 1; background: #000; border: 1px solid #444; color: #666; padding: 10px; font-weight: bold; cursor: pointer; transition: 0.3s; }
-.mode-btn.active { border-color: #00ff00; color: #00ff00; background: #003300; }
+/* MAPPA ROTONDA */
+.map-system { display: flex; align-items: center; justify-content: center; gap: 15px; margin: 15px 0; }
+.map-main-container { 
+    position: relative; 
+    width: 280px; 
+    height: 280px; 
+    border: 3px solid #00ff00; 
+    border-radius: 50%; 
+    overflow: hidden; 
+    box-shadow: 0 0 20px rgba(0, 255, 0, 0.2);
+}
+#map-rotate, #map { width: 100%; height: 100%; }
+#player-pointer { 
+    position: absolute; top: 50%; left: 50%; 
+    transform: translate(-50%, -50%); z-index: 2000; 
+    color: #fff; font-size: 20px; text-shadow: 0 0 5px #000; pointer-events: none; 
+}
 
-.top-bar { display: flex; justify-content: space-around; align-items: center; margin-bottom: 10px; background: #111; padding: 5px; border: 1px solid #333; height: 50px; }
-.countdown-display { font-size: 1.8rem; font-weight: bold; color: #fff; }
-.score-display { font-size: 1.8rem; font-weight: bold; letter-spacing: 5px; }
-.s-red { color: #ff3333; }
-.s-blue { color: #33ccff; }
+/* TASTI ESTERNI */
+.map-controls-external { display: flex; flex-direction: column; gap: 10px; }
+.ext-btn { 
+    width: 50px; height: 50px; background: #111; border: 2px solid #00ff00; 
+    color: #00ff00; border-radius: 8px; font-size: 1rem; cursor: pointer;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+}
+.ext-btn small { font-size: 0.5rem; }
 
-.exit-btn { position: absolute; top: 10px; right: 10px; width: auto; padding: 6px 12px; background: #990000; color: #fff; border: 1px solid #fff; font-weight: bold; z-index: 5000; font-size: 0.7rem; border-radius: 4px; }
+/* UI DI GIOCO */
+.top-bar { display: flex; justify-content: space-around; align-items: center; background: #111; border: 1px solid #333; padding: 10px; margin-bottom: 10px; }
+.countdown-display { font-size: 1.5rem; color: #fff; }
+.score-display { font-size: 1.5rem; letter-spacing: 3px; }
+.s-red { color: #ff3333; } .s-blue { color: #33ccff; }
 
-.m-config-grid { display: grid; gap: 5px; margin-top: 10px; }
-.m-row { display: flex; justify-content: space-between; align-items: center; font-size: 0.7rem; color: #ccc; }
-.m-row input { width: 60%; padding: 5px; font-size: 0.7rem; height: 30px; }
+.exit-btn { position: absolute; top: 10px; right: 10px; background: #600; color: #fff; border: 1px solid #fff; z-index: 5000; padding: 5px 10px; font-size: 0.7rem; }
 
-.slot-list { margin-top: 10px; max-height: 200px; overflow-y: auto; border: 1px solid #222; padding: 5px; background: #000; }
-.obj-slot { display: flex; flex-wrap: wrap; gap: 5px; padding: 8px; margin-bottom: 8px; border-bottom: 1px solid #333; }
-.obj-slot input[type="checkbox"] { width: 20px; height: 20px; }
-.obj-slot .s-name { flex: 1; min-width: 80px; font-size: 0.75rem !important; }
+#nav-panel { background: rgba(0,255,0,0.1); border: 1px solid #00ff00; padding: 8px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; border-radius: 5px; }
 
-.btn-start { background: #00ff00; color: #000; font-weight: bold; margin-top: 10px; border: none; cursor: pointer; }
+.game-info-container { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; height: 140px; }
+.info-section { background: #111; border: 1px solid #333; padding: 5px; overflow-y: auto; }
+.info-section h3 { font-size: 0.6rem; color: #888; margin: 0 0 5px 0; border-bottom: 1px solid #222; }
+.data-list { list-style: none; padding: 0; margin: 0; font-size: 0.7rem; }
+.data-list li { padding: 4px 0; border-bottom: 1px solid #222; display: flex; justify-content: space-between; }
 
-.map-outer { position: relative; width: 100%; height: 380px; border: 2px solid #00ff00; border-radius: 10px; margin: 10px 0; background: #000; overflow: hidden; }
-#map-rotate { width: 100%; height: 100%; transition: transform 0.1s linear; }
-#map { width: 100%; height: 100%; }
-#player-pointer { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 2000; font-size: 20px; color: #fff; pointer-events: none; text-shadow: 0 0 5px #000; }
-
-.map-btn { position: absolute; z-index: 2005; background: rgba(0,0,0,0.8); border: 2px solid #00ff00; color: #00ff00; width: 44px; height: 44px; border-radius: 50%; padding: 0; }
-.btn-gps { top: 10px; right: 10px; }
-.btn-reload { bottom: 10px; right: 10px; }
-
-.game-info-container { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
-.info-section { background: #111; border: 1px solid #333; padding: 8px; text-align: left; }
-.info-section h3 { font-size: 0.7rem; margin: 0 0 5px 0; color: #aaa; border-bottom: 1px solid #333; padding-bottom: 3px; }
-.data-list { list-style: none; padding: 0; margin: 0; font-size: 0.7rem; max-height: 120px; overflow-y: auto; }
-.data-list li { padding: 5px 0; border-bottom: 1px solid #222; display: flex; justify-content: space-between; cursor: pointer; }
-
-.btn-danger { color: red; border-color: red; margin-top: 10px; font-size: 0.7rem; padding: 8px; }
-
-.nav-line-style { stroke-dasharray: 10, 10; animation: dash-move 1.5s linear infinite; pointer-events: none; }
-@keyframes dash-move { from { stroke-dashoffset: 20; } to { stroke-dashoffset: 0; } }
+.mode-selector { display: flex; gap: 5px; }
+.mode-btn { flex: 1; font-size: 0.7rem; opacity: 0.5; }
+.mode-btn.active { opacity: 1; background: #004400; }
+.btn-danger { color: red; border-color: red; font-size: 0.6rem; margin-top: 5px; }
