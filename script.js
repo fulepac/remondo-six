@@ -3,12 +3,18 @@ const SECRET_KEY = "$2a$10$8flpC9MOhAbyRpJOlsFLWO.Mb/virkFhLrl9MIFwETKeSkmBYiE2e
 const URL = `https://api.jsonbin.io/v3/b/${BIN_ID}`;
 const PWD_MASTER = "71325";
 
+// CONFIGURAZIONE AREA MAPPA (Vigevano Default)
+const mapBounds = [
+    [45.2350, 8.8060], 
+    [45.2410, 8.8140]  
+];
+
 const DEFAULT_OBJS = [
-    { name: "ALFA", lat: 45.2377, lon: 8.8097, owner: "LIBERO" },
-    { name: "BRAVO", lat: 45.2385, lon: 8.8105, owner: "LIBERO" },
-    { name: "CHARLIE", lat: 45.2369, lon: 8.8115, owner: "LIBERO" },
-    { name: "DELTA", lat: 45.2392, lon: 8.8085, owner: "LIBERO" },
-    { name: "ECHO", lat: 45.2360, lon: 8.8075, owner: "LIBERO" }
+    { name: "ALFA", lat: 45.2377, lon: 8.8097, owner: "LIBERO", pRed: 0, pBlue: 0 },
+    { name: "BRAVO", lat: 45.2385, lon: 8.8105, owner: "LIBERO", pRed: 0, pBlue: 0 },
+    { name: "CHARLIE", lat: 45.2369, lon: 8.8115, owner: "LIBERO", pRed: 0, pBlue: 0 },
+    { name: "DELTA", lat: 45.2392, lon: 8.8085, owner: "LIBERO", pRed: 0, pBlue: 0 },
+    { name: "ECHO", lat: 45.2360, lon: 8.8075, owner: "LIBERO", pRed: 0, pBlue: 0 }
 ];
 
 let state = { 
@@ -17,8 +23,8 @@ let state = {
     playerTeam: "", 
     playerMarker: null, 
     autoCenter: true, 
-    selectedMode: "DOMINATION",
-    targetObj: null,
+    selectedMode: "DOMINATION", 
+    targetObj: null, 
     navLine: null 
 };
 
@@ -36,11 +42,23 @@ window.onload = () => {
 };
 
 function initMap() {
-    map = L.map("map", { zoomControl: false, attributionControl: false }).setView([45.2377, 8.8097], 18);
+    map = L.map("map", { 
+        zoomControl: false, 
+        attributionControl: false, 
+        maxBounds: mapBounds,
+        maxBoundsViscosity: 1.0 
+    }).setView([45.2377, 8.8097], 18);
+
+    // Overlay Immagine per Offline
+    L.imageOverlay('mappa.jpg', mapBounds, { opacity: 1.0 }).addTo(map);
+
+    // Tile Google Satellite per Online
     L.tileLayer('https://{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', { 
-        subdomains:['mt0','mt1','mt2','mt3'], maxZoom: 21 
+        subdomains:['mt0','mt1','mt2','mt3'], 
+        maxZoom: 21 
     }).addTo(map);
-    map.on('dragstart', () => state.autoCenter = false);
+
+    map.on('dragstart', () => { state.autoCenter = false; });
 }
 
 function checkMasterPass() {
@@ -64,28 +82,35 @@ async function loadConfigFromServer() {
         const { record } = await res.json();
         const container = document.getElementById("objSlotContainer");
         container.innerHTML = "";
+        
         const currentObjs = (record.objectives && record.objectives.length > 0) ? record.objectives : DEFAULT_OBJS;
+        
         for (let i = 0; i < 10; i++) {
             let o = currentObjs[i] || { name: `OBJ${i+1}`, lat: "", lon: "" };
-            container.innerHTML += `<div class="obj-slot">
-                <input type="checkbox" class="s-active" ${o.lat ? 'checked' : ''}>
-                <input type="text" class="s-name" value="${o.name}" style="width:60px">
-                <input type="text" class="s-lat" value="${o.lat}" placeholder="Lat">
-                <input type="text" class="s-lon" value="${o.lon}" placeholder="Lon">
-            </div>`;
+            container.innerHTML += `
+                <div class="obj-slot">
+                    <input type="checkbox" class="s-active" ${o.lat ? 'checked' : ''}>
+                    <input type="text" class="s-name" value="${o.name}" style="width:60px">
+                    <input type="text" class="s-lat" value="${o.lat}" placeholder="Lat">
+                    <input type="text" class="s-lon" value="${o.lon}" placeholder="Lon">
+                </div>`;
         }
-    } catch(e) {}
+    } catch(e) { console.log("Errore caricamento config"); }
 }
 
 function handleRotation(e) {
     let compass = e.webkitCompassHeading || (360 - e.alpha);
-    if(compass) document.getElementById("map-rotate").style.transform = `rotate(${-compass}deg)`;
+    if(compass) {
+        document.getElementById("map-rotate").style.transform = `rotate(${-compass}deg)`;
+    }
 }
 
 function enableSensorsAndStart(isMasterAction) {
     state.playerName = document.getElementById("playerName").value.trim().toUpperCase();
     state.playerTeam = document.getElementById("teamSelect").value;
-    if(!state.playerName) return alert("NOME OPERATORE?");
+    if(!state.playerName) return alert("INSERIRE NOME OPERATORE");
+
+    localStorage.setItem("six_app_session", JSON.stringify({name: state.playerName, team: state.playerTeam}));
 
     if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
         DeviceOrientationEvent.requestPermission().then(res => {
@@ -98,7 +123,10 @@ function enableSensorsAndStart(isMasterAction) {
     }
 }
 
-async function saveAndStart() { await sync(true); startGame(); }
+async function saveAndStart() {
+    await sync(true);
+    startGame();
+}
 
 async function startGame() {
     document.getElementById("setup-screen").style.display = "none";
@@ -129,13 +157,17 @@ async function sync(forceMaster) {
         if(!record.players) record.players = {};
         record.players[state.playerName] = { 
             team: state.playerTeam, 
-            lat: state.playerMarker?.getLatLng().lat || 0, 
-            lon: state.playerMarker?.getLatLng().lng || 0, 
+            lat: state.playerMarker ? state.playerMarker.getLatLng().lat : 0, 
+            lon: state.playerMarker ? state.playerMarker.getLatLng().lng : 0, 
             last: Date.now() 
         };
 
         if(state.isMaster || forceMaster) {
-            record.game = { mode: state.selectedMode, scoreRed: record.game?.scoreRed || 0, scoreBlue: record.game?.scoreBlue || 0 };
+            record.game = { 
+                mode: state.selectedMode, 
+                scoreRed: record.game?.scoreRed || 0, 
+                scoreBlue: record.game?.scoreBlue || 0 
+            };
             let newObjs = [];
             document.querySelectorAll(".obj-slot").forEach(s => {
                 if(s.querySelector(".s-active").checked) {
@@ -150,23 +182,35 @@ async function sync(forceMaster) {
             record.objectives = newObjs;
         }
 
-        await fetch(URL, { method:"PUT", headers:{"Content-Type":"application/json","X-Master-Key":SECRET_KEY}, body: JSON.stringify(record)});
+        await fetch(URL, { 
+            method:"PUT", 
+            headers:{"Content-Type":"application/json","X-Master-Key":SECRET_KEY}, 
+            body: JSON.stringify(record)
+        });
         updateUI(record);
-    } catch(e) {}
+    } catch(e) { console.log("Sync Error"); }
 }
 
 function updateUI(r) {
-    activeMarkers.forEach(m => map.removeLayer(m)); activeMarkers = [];
-    const sb = document.getElementById("scoreboard"); sb.innerHTML = "";
+    activeMarkers.forEach(m => map.removeLayer(m));
+    activeMarkers = [];
     
-    // Mostra classifica solo in DOMINATION
-    document.getElementById("score-panel").style.display = (r.game?.mode === 'DOMINATION') ? 'flex' : 'none';
-    document.getElementById("scoreRed").innerText = r.game?.scoreRed || 0;
-    document.getElementById("scoreBlue").innerText = r.game?.scoreBlue || 0;
+    // Gestione Classifica Domination
+    const scorePanel = document.getElementById("score-panel");
+    if(r.game?.mode === 'DOMINATION') {
+        scorePanel.style.display = 'flex';
+        document.getElementById("scoreRed").innerText = r.game.scoreRed || 0;
+        document.getElementById("scoreBlue").innerText = r.game.scoreBlue || 0;
+    } else {
+        scorePanel.style.display = 'none';
+    }
 
+    // Lista Obiettivi
+    const sb = document.getElementById("scoreboard");
+    sb.innerHTML = "";
     (r.objectives || []).forEach(obj => {
         const li = document.createElement("li");
-        li.innerHTML = `${obj.name} <span class="owner-${obj.owner}">${obj.owner}</span>`;
+        li.innerHTML = `<b>${obj.name}</b> <span class="owner-${obj.owner}">${obj.owner}</span>`;
         li.onclick = () => startNavigation(obj);
         sb.appendChild(li);
 
@@ -176,11 +220,14 @@ function updateUI(r) {
         activeMarkers.push(m);
     });
 
-    const pList = document.getElementById("playerList"); pList.innerHTML = "";
+    // Lista Squadra
+    const pList = document.getElementById("playerList");
+    pList.innerHTML = "";
     Object.entries(r.players || {}).forEach(([name, p]) => {
         if(Date.now() - p.last < 30000 && p.team === state.playerTeam && name !== state.playerName) {
             pList.innerHTML += `<li>${name} <span>${getDist(p.lat, p.lon)}m</span></li>`;
-            activeMarkers.push(L.circleMarker([p.lat, p.lon], {radius: 6, color: p.team==='RED'?'red':'cyan', fillOpacity:1}).addTo(map));
+            let tm = L.circleMarker([p.lat, p.lon], {radius: 6, color: p.team==='RED'?'red':'cyan', fillOpacity:1}).addTo(map);
+            activeMarkers.push(tm);
         }
     });
 }
@@ -202,12 +249,10 @@ function updateNavigationLine() {
     if(!state.targetObj || !state.playerMarker) return;
     const p1 = state.playerMarker.getLatLng();
     const p2 = [state.targetObj.lat, state.targetObj.lon];
-    const dist = getDist(p2[0], p2[1]);
-    
-    document.getElementById("nav-text").innerText = `${state.targetObj.name}: ${dist}m`;
-
+    const d = getDist(p2[0], p2[1]);
+    document.getElementById("nav-text").innerText = `${state.targetObj.name}: ${d}m`;
     if(state.navLine) map.removeLayer(state.navLine);
-    state.navLine = L.polyline([p1, p2], {color: 'yellow', weight: 4, dashArray: '10, 10', opacity: 0.8}).addTo(map);
+    state.navLine = L.polyline([p1, p2], {color: 'yellow', weight: 4, dashArray: '10, 15', opacity: 0.8}).addTo(map);
 }
 
 function getDist(lat2, lon2) {
@@ -221,5 +266,14 @@ function getDist(lat2, lon2) {
 }
 
 function centerMap() { state.autoCenter = true; if(state.playerMarker) map.panTo(state.playerMarker.getLatLng()); }
-function exitGame() { if(confirm("ESCI?")) location.reload(); }
-async function resetBin() { if(confirm("RESET?")) { await fetch(URL, { method:"PUT", headers:{"Content-Type":"application/json","X-Master-Key":SECRET_KEY}, body: JSON.stringify({game:{mode:"DOMINATION",scoreRed:0,scoreBlue:0},players:{},objectives:DEFAULT_OBJS})}); location.reload(); } }
+function exitGame() { if(confirm("ESCI DALL'OPERAZIONE?")) location.reload(); }
+async function resetBin() {
+    if(confirm("RESET TOTALE SERVER?")) {
+        await fetch(URL, { 
+            method:"PUT", 
+            headers:{"Content-Type":"application/json","X-Master-Key":SECRET_KEY}, 
+            body: JSON.stringify({game:{mode:"DOMINATION",scoreRed:0,scoreBlue:0},players:{},objectives:DEFAULT_OBJS})
+        });
+        location.reload();
+    }
+}
