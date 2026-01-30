@@ -8,16 +8,13 @@ let activeMarkers = [];
 let map;
 
 function initMap() {
+    // Comandi Standard Leaflet
     map = L.map("map", { 
         zoomControl: true, attributionControl: false, dragging: true, touchZoom: true, worldCopyJump: false
     }).setView([45.2377, 8.8097], 18);
+    
     L.tileLayer('https://{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', { subdomains:['mt0','mt1','mt2','mt3'] }).addTo(map);
 
-    let originalOnTouchMove = map.dragging._onMove;
-    map.dragging._onMove = function (e) {
-        if (e.touches && e.touches.length === 1) state.autoCenter = false;
-        originalOnTouchMove.apply(this, arguments);
-    };
     map.on('dragstart', () => { state.autoCenter = false; });
 }
 
@@ -164,8 +161,10 @@ function updateUI(r) {
         activeMarkers.push(m);
     });
 
-    document.getElementById("scoreRed").innerText = rScore;
-    document.getElementById("scoreBlue").innerText = bScore;
+    if(!isRecon) {
+        document.getElementById("scoreRed").innerText = rScore;
+        document.getElementById("scoreBlue").innerText = bScore;
+    }
 
     const pList = document.getElementById("playerList"); pList.innerHTML = "";
     Object.entries(r.players || {}).forEach(([name, p]) => {
