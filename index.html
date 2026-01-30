@@ -27,7 +27,7 @@
                 <input id="masterPass" type="password" placeholder="PASSWORD MASTER" oninput="checkMasterPass()">
                 <div id="masterTools" style="display:none;">
                     <p class="m-title">COMANDO OPERAZIONE (MASTER)</p>
-                    <div class="mode-selector">
+                    <div class="mode-selector" style="display: flex; gap: 10px; margin-bottom: 15px;">
                         <button id="btnDomination" type="button" class="mode-btn active" onclick="selectGameMode('DOMINATION')">DOMINIO</button>
                         <button id="btnRecon" type="button" class="mode-btn" onclick="selectGameMode('RECON')">RECON</button>
                     </div>
@@ -49,31 +49,8 @@
         </div>
     </div>
 
-    <div id="tutorial-overlay" class="overlay" style="display:none;">
-        <div class="overlay-content">
-            <h2>🛰️ PRESENTAZIONE TATTICA</h2>
-            <div class="scroll-text">
-                <p><strong>SIX APP</strong> è un sistema di coordinamento tattico progettato da <strong>Fulvio</strong> per gestire operazioni sul campo in tempo reale.</p>
-                <hr>
-                <h3>1. ARCHITETTURA</h3>
-                <p>Il sistema sincronizza via Cloud il <strong>Comando (Master)</strong> e le <strong>Unità (Operatori)</strong>. Il Master configura obiettivi e tempi, gli Operatori eseguono.</p>
-                <h3>2. MODALITÀ</h3>
-                <p><strong>DOMINIO:</strong> Conquista punti e accumula punteggio prima dello scadere del timer.<br>
-                <strong>RECON:</strong> Infiltrazione e mappatura senza la pressione del cronometro.</p>
-                <h3>3. HUD TATTICO</h3>
-                <p><strong>Mappa Dinamica:</strong> Ruota con la tua bussola fisica.<br>
-                <strong>Navigazione:</strong> Clicca un obiettivo per vedere distanza e rotta gialla.<br>
-                <strong>Team Radar:</strong> Visualizza i tuoi compagni sulla mappa in tempo reale.</p>
-                <h3>4. SICUREZZA</h3>
-                <p>Solo il Master può abortire la missione e resettare il database globale per tutte le unità.</p>
-            </div>
-            <button class="btn-start" onclick="toggleTutorial(false)">RICEVUTO</button>
-        </div>
-    </div>
-
     <div id="game-ui" style="display:none;">
         <button class="exit-btn" onclick="exitGame()">SCOLLEGATI</button>
-        
         <div class="top-bar">
             <div id="timer" class="countdown-display">⏱️ --:--</div>
             <div id="score-panel" class="score-display">
@@ -81,32 +58,10 @@
                 <div class="score-box blue">B: <span id="scoreBlue">0</span></div>
             </div>
         </div>
-
         <div class="map-system">
             <div class="map-main-container">
                 <div id="map-rotate"><div id="map"></div></div>
                 <div id="player-pointer">▲</div>
-                
-                <div id="nav-overlay" class="nav-hud" style="display:none;">
-                    <div id="nav-text">NAVIGAZIONE...</div>
-                    <button onclick="stopNavigation()" class="nav-stop-btn">ANNULLA</button>
-                </div>
-            </div>
-            <div class="map-controls-external">
-                <button onclick="centerMap()" class="ext-btn">🎯</button>
-                <button onclick="map.zoomIn()" class="ext-btn">➕</button>
-                <button onclick="map.zoomOut()" class="ext-btn">➖</button>
-            </div>
-        </div>
-
-        <div class="game-info-container">
-            <div class="info-section">
-                <h3>📍 OBIETTIVI</h3>
-                <ul id="scoreboard" class="data-list"></ul>
-            </div>
-            <div class="info-section">
-                <h3>👥 TEAM RADAR</h3>
-                <ul id="playerList" class="data-list"></ul>
             </div>
         </div>
     </div>
