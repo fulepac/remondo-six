@@ -166,7 +166,7 @@ function updateUI(r) {
         document.getElementById("scoreBlue").innerText = r.game.scoreBlue || 0;
         const elapsed = Math.floor((Date.now() - r.game.start) / 1000);
         const remain = ((r.game.duration || 30) * 60) - elapsed;
-        timerEl.innerText = remain > 0 ? `⏱️ ${Math.floor(remain/60)}:${(remain%60).toString().padStart(2,'0')}` : "FINE";
+        timerEl.innerText = remain > 0 ? `⏱️ ${Math.floor(remain/60)}:${(remain%60).toString().padStart(2,'0')}` : "FINE MISSIONE";
     } else {
         scorePanel.style.display = 'none'; timerEl.style.display = 'none';
     }
@@ -213,7 +213,7 @@ function getDist(lat2, lon2) {
 function centerMap() { state.autoCenter = true; if(state.playerMarker) map.panTo(state.playerMarker.getLatLng()); }
 function exitGame() { if(confirm("SCOLLEGARTI?")) location.reload(); }
 async function resetBin() {
-    if(confirm("RESET?")) {
+    if(confirm("RESETTARE TUTTO?")) {
         await fetch(URL, { method:"PUT", headers:{"Content-Type":"application/json","X-Master-Key":SECRET_KEY}, body: JSON.stringify({game:{mode:"DOMINATION",scoreRed:0,scoreBlue:0,start:Date.now(),duration:30},players:{},objectives:DEFAULT_OBJS})});
         location.reload();
     }
