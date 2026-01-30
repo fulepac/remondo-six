@@ -26,8 +26,8 @@
                 <div class="m-config-grid">
                     <div class="m-row"><label>DURATA (MIN):</label><input id="gameDuration" type="number" value="30"></div>
                     <div class="m-row"><label>CATTURA (SEC):</label><input id="captureTime" type="number" value="180"></div>
-                    <div class="m-row"><label>NOME TEAM ROSSO:</label><input id="teamRedName" type="text" value="TEAM ROSSO"></div>
-                    <div class="m-row"><label>NOME TEAM BLU:</label><input id="teamBlueName" type="text" value="TEAM BLU"></div>
+                    <div class="m-row"><label>NOME ROSSO:</label><input id="teamRedName" type="text" value="TEAM ROSSO"></div>
+                    <div class="m-row"><label>NOME BLU:</label><input id="teamBlueName" type="text" value="TEAM BLU"></div>
                 </div>
                 <p style="color:yellow; font-size:0.7rem; margin:10px 0 5px 0;">CONFIGURA 10 OBIETTIVI:</p>
                 <div id="objSlotContainer" class="slot-list"></div>
@@ -40,9 +40,9 @@
     <div id="game-ui" style="display:none;">
         <div id="timer" class="countdown-display">⏱️ --:--</div>
         
-        <div id="nav-panel" style="display:none; background: rgba(0,255,0,0.1); border: 1px solid #00ff00; padding: 5px; text-align: center; margin-bottom: 5px;">
-            <span id="nav-info" style="font-weight: bold; font-size: 0.9rem;"></span>
-            <button onclick="stopNavigation()" style="width: auto; padding: 2px 10px; margin-left: 10px; background: red; color: white; border: none; font-size: 0.7rem;">X ESCI</button>
+        <div id="nav-panel" style="display:none; background: rgba(0,0,0,0.8); border: 1px solid #fff; padding: 10px; text-align: center; margin-bottom: 5px; border-radius: 5px;">
+            <span id="nav-info" style="font-weight: bold; font-size: 1rem; color: #fff;"></span>
+            <button onclick="stopNavigation()" style="width: auto; padding: 5px 15px; margin-left: 10px; background: #ff0000; color: #fff; border: none; font-size: 0.8rem; border-radius: 4px;">ESCI</button>
         </div>
 
         <div class="map-outer">
