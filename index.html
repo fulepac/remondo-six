@@ -10,7 +10,7 @@
 <body>
     <header id="main-header">
         <h1>🎯 SIX APP</h1>
-        <div class="credits">Creato da Fulvio Versione v.4_30126</div>
+        <div class="credits">Creato da Fulvio Versione v.4.1_30126</div>
     </header>
 
     <div id="setup-screen">
@@ -30,7 +30,7 @@
                         <button id="btnRecon" class="mode-btn" onclick="setGameMode('RECON')">RECON</button>
                     </div>
                     <div class="m-config-grid">
-                        <div class="m-row" id="rowDuration"><label>DURATA (MIN):</label><input id="gameDuration" type="number" value="30"></div>
+                        <div class="m-row"><label>DURATA (MIN):</label><input id="gameDuration" type="number" value="30"></div>
                         <div class="m-row"><label>CATTURA (SEC):</label><input id="captureTime" type="number" value="180"></div>
                         <div class="m-row"><label>NOME ROSSO:</label><input id="teamRedName" type="text" value="TEAM ROSSO"></div>
                         <div class="m-row"><label>NOME BLU:</label><input id="teamBlueName" type="text" value="TEAM BLU"></div>
@@ -46,7 +46,6 @@
 
     <div id="game-ui" style="display:none;">
         <button class="exit-btn" onclick="exitGame()">ESCI</button>
-        
         <div id="header-stats">
             <div class="top-bar" id="gameTopBar">
                 <div id="timer" class="countdown-display">⏱️ --:--</div>
@@ -55,7 +54,6 @@
                 </div>
             </div>
         </div>
-
         <div class="map-system">
             <div class="map-main-container">
                 <div id="map-rotate"><div id="map"></div></div>
@@ -68,10 +66,9 @@
                 <button onclick="reloadMap()" class="ext-btn">🔄</button>
             </div>
         </div>
-
         <div class="game-info-container">
             <div class="info-section">
-                <h3>📍 OBIETTIVI (Clicca per Navigare)</h3>
+                <h3>📍 OBIETTIVI</h3>
                 <ul id="scoreboard" class="data-list"></ul>
             </div>
             <div class="info-section">
@@ -79,13 +76,11 @@
                 <ul id="playerList" class="data-list"></ul>
             </div>
         </div>
-
         <div id="nav-panel" style="display:none;">
             <span id="nav-info"></span>
             <button onclick="stopNavigation()" class="btn-cancel-nav">ANNULLA NAVIGAZIONE</button>
         </div>
     </div>
-
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="script.js"></script>
 </body>
