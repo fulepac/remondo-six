@@ -49,23 +49,26 @@ async function loadConfigFromServer() {
                 <input type="text" class="s-lon" value="${o.lon}" placeholder="Lon" style="width:75px">
             </div>`;
         }
+        if(record.game) {
+            document.getElementById("teamRedName").value = record.game.teamRedName || "TEAM ROSSO";
+            document.getElementById("teamBlueName").value = record.game.teamBlueName || "TEAM BLU";
+            setGameMode(record.game.mode || "DOMINATION");
+        }
     } catch(e) {}
+}
+
+function setGameMode(m) {
+    state.gameMode = m;
+    document.getElementById("btnDomination").classList.toggle("active", m === "DOMINATION");
+    document.getElementById("btnRecon").classList.toggle("active", m === "RECON");
 }
 
 function enableSensorsAndStart() {
     state.playerName = document.getElementById("playerName").value.trim().toUpperCase();
     state.playerTeam = document.getElementById("teamSelect").value;
-    if(!state.playerName) return alert("INSERISCI NOME OPERATORE");
+    if(!state.playerName) return alert("INSERISCI NOME");
     localStorage.setItem("six_app_session", JSON.stringify({name: state.playerName, team: state.playerTeam}));
-
-    if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
-        DeviceOrientationEvent.requestPermission().then(res => { 
-            if (res === 'granted') { window.addEventListener('deviceorientation', handleRotation, true); startGame(); } 
-        }).catch(() => startGame());
-    } else {
-        window.addEventListener('deviceorientation', handleRotation, true);
-        startGame();
-    }
+    startGame();
 }
 
 function handleRotation(e) {
@@ -79,6 +82,7 @@ function handleRotation(e) {
 async function startGame() {
     document.getElementById("setup-screen").style.display = "none";
     document.getElementById("game-ui").style.display = "block";
+    window.addEventListener('deviceorientation', handleRotation, true);
     setTimeout(() => {
         map.invalidateSize();
         navigator.geolocation.watchPosition(p => {
@@ -99,12 +103,15 @@ async function sync() {
     try {
         const res = await fetch(`${URL}/latest`, { headers: {"X-Master-Key":SECRET_KEY}, cache:'no-store'});
         let { record } = await res.json();
-        
-        if(state.playerMarker) {
-            if(!record.players) record.players = {};
-            record.players[state.playerName] = { team: state.playerTeam, lat: state.playerMarker.getLatLng().lat, lon: state.playerMarker.getLatLng().lng, last: Date.now() };
+        if(!record.players) record.players = {};
+        if(state.playerName) {
+            record.players[state.playerName] = { 
+                team: state.playerTeam, 
+                lat: state.playerMarker ? state.playerMarker.getLatLng().lat : 0, 
+                lon: state.playerMarker ? state.playerMarker.getLatLng().lng : 0, 
+                last: Date.now() 
+            };
         }
-
         if(state.isMaster) {
             record.game.mode = state.gameMode;
             record.game.teamRedName = document.getElementById("teamRedName").value;
@@ -122,7 +129,6 @@ async function sync() {
             });
             record.objectives = newObjs;
         }
-        
         await fetch(URL, { method:"PUT", headers:{"Content-Type":"application/json","X-Master-Key":SECRET_KEY}, body: JSON.stringify(record)});
         updateUI(record);
     } catch(e) {}
@@ -130,11 +136,9 @@ async function sync() {
 
 function updateUI(r) {
     const isRecon = r.game.mode === 'RECON';
-    document.getElementById("gameTopBar").style.display = isRecon ? "none" : "flex";
-
+    document.getElementById("header-stats").style.display = isRecon ? "none" : "block";
     activeMarkers.forEach(m => map.removeLayer(m)); activeMarkers = [];
     const sb = document.getElementById("scoreboard"); sb.innerHTML = "";
-    
     (r.objectives || []).forEach(obj => {
         const li = document.createElement("li");
         li.innerHTML = `${obj.name} <span>${isRecon ? 'NAV' : obj.owner}</span>`;
@@ -143,7 +147,6 @@ function updateUI(r) {
         let color = obj.owner === 'RED' ? 'red' : obj.owner === 'BLUE' ? 'cyan' : 'white';
         activeMarkers.push(L.circle([obj.lat, obj.lon], {radius: 15, color: color, weight: 3}).addTo(map).bindTooltip(obj.name, {permanent:true, direction:'top'}));
     });
-
     const pList = document.getElementById("playerList"); pList.innerHTML = "";
     Object.entries(r.players || {}).forEach(([name, p]) => {
         if(Date.now() - p.last < 15000 && p.team === state.playerTeam) {
@@ -156,6 +159,5 @@ function updateUI(r) {
 function exitGame() { localStorage.removeItem("six_app_session"); location.reload(); }
 function centerMap() { state.autoCenter = true; if(state.playerMarker) map.panTo(state.playerMarker.getLatLng()); }
 function reloadMap() { map.invalidateSize(); }
-function setGameMode(m) { state.gameMode = m; document.querySelectorAll(".mode-btn").forEach(b => b.classList.remove("active")); }
 function stopNavigation() { state.targetObj = null; document.getElementById("nav-panel").style.display = "none"; }
 async function resetBin() { if(confirm("RESET TOTALE?")) { await fetch(URL, { method:"PUT", headers:{"Content-Type":"application/json","X-Master-Key":SECRET_KEY}, body: JSON.stringify({game:{started:false,mode:"DOMINATION"},players:{},objectives:[]})}); location.reload(); } }
