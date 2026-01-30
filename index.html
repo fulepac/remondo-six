@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SIX APP</title>
+    <title>SIX APP v.4.5</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <header id="main-header">
         <h1>🎯 SIX APP</h1>
-        <div class="credits">Creato da Fulvio v.4.4_300126</div>
+        <div class="credits">Creato da Fulvio v.4.3_300126</div>
     </header>
 
     <div id="setup-screen">
@@ -24,18 +24,19 @@
             <div class="master-zone">
                 <input id="masterPass" type="password" placeholder="PASSWORD MASTER" oninput="checkMasterPass()">
                 <div id="masterTools" style="display:none;">
-                    <p class="m-title">CONFIGURAZIONE GARA</p>
+                    <p class="m-title">MODALITÀ DI GIOCO</p>
                     <div class="mode-selector">
-                        <button id="btnDomination" class="mode-btn active" onclick="setGameMode('DOMINATION')">DOMINIO</button>
-                        <button id="btnRecon" class="mode-btn" onclick="setGameMode('RECON')">RECON</button>
+                        <button id="btnDomination" class="mode-btn active" onclick="selectGameMode('DOMINATION')">DOMINIO</button>
+                        <button id="btnRecon" class="mode-btn" onclick="selectGameMode('RECON')">RECON</button>
                     </div>
+                    
+                    <p class="m-title">PARAMETRI</p>
                     <div class="m-config-grid">
                         <div class="m-row"><label>DURATA (MIN):</label><input id="gameDuration" type="number" value="30"></div>
                         <div class="m-row"><label>CATTURA (SEC):</label><input id="captureTime" type="number" value="180"></div>
-                        <div class="m-row"><label>NOME ROSSO:</label><input id="teamRedName" type="text" value="TEAM ROSSO"></div>
-                        <div class="m-row"><label>NOME BLU:</label><input id="teamBlueName" type="text" value="TEAM BLU"></div>
                     </div>
-                    <p class="m-title">CONFIGURA 10 OBIETTIVI</p>
+
+                    <p class="m-title">OBIETTIVI (MAX 10)</p>
                     <div id="objSlotContainer" class="slot-list"></div>
                     
                     <button class="btn-start-master" onclick="enableSensorsAndStart(true)">🚀 SALVA E AVVIA PARTITA</button>
@@ -49,12 +50,10 @@
 
     <div id="game-ui" style="display:none;">
         <button class="exit-btn" onclick="exitGame()">ESCI</button>
-        <div id="header-stats">
-            <div class="top-bar" id="gameTopBar">
-                <div id="timer" class="countdown-display">⏱️ --:--</div>
-                <div class="score-display">
-                    <span id="scoreRed" class="s-red">0</span> - <span id="scoreBlue" class="s-blue">0</span>
-                </div>
+        <div class="top-bar">
+            <div id="timer" class="countdown-display">⏱️ --:--</div>
+            <div class="score-display">
+                <span id="scoreRed" class="s-red">0</span> - <span id="scoreBlue" class="s-blue">0</span>
             </div>
         </div>
         <div class="map-system">
@@ -63,10 +62,10 @@
                 <div id="player-pointer">▲</div>
             </div>
             <div class="map-controls-external">
-                <button onclick="centerMap()" class="ext-btn">🎯<br><small>GPS</small></button>
+                <button onclick="centerMap()" class="ext-btn">🎯</button>
                 <button onclick="map.zoomIn()" class="ext-btn">➕</button>
                 <button onclick="map.zoomOut()" class="ext-btn">➖</button>
-                <button onclick="reloadMap()" class="ext-btn">🔄</button>
+                <button onclick="location.reload()" class="ext-btn">🔄</button>
             </div>
         </div>
         <div class="game-info-container">
@@ -78,10 +77,6 @@
                 <h3>👥 SQUADRA</h3>
                 <ul id="playerList" class="data-list"></ul>
             </div>
-        </div>
-        <div id="nav-panel" style="display:none;">
-            <span id="nav-info"></span>
-            <button onclick="stopNavigation()" class="btn-cancel-nav">ANNULLA NAVIGAZIONE</button>
         </div>
     </div>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
