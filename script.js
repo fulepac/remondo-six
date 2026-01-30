@@ -50,12 +50,16 @@ function checkMasterPass() {
     }
 }
 
+// CORREZIONE: Aggiunta sincronizzazione immediata al cambio modalità
 async function selectGameMode(m) {
     state.selectedMode = m;
     document.getElementById("btnDomination").classList.toggle("active", m === 'DOMINATION');
     document.getElementById("btnRecon").classList.toggle("active", m === 'RECON');
-    // Sincronizzazione immediata al cambio modalità
-    if(state.isMaster) await sync(true);
+    
+    if(state.isMaster) {
+        console.log("Cambio modalità Master:", m);
+        await sync(true); // Forza l'invio della modalità al database
+    }
 }
 
 async function loadConfigFromServer() {
