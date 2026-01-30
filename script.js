@@ -50,10 +50,12 @@ function checkMasterPass() {
     }
 }
 
-function selectGameMode(m) {
+async function selectGameMode(m) {
     state.selectedMode = m;
     document.getElementById("btnDomination").classList.toggle("active", m === 'DOMINATION');
     document.getElementById("btnRecon").classList.toggle("active", m === 'RECON');
+    // Sincronizzazione immediata al cambio modalità
+    if(state.isMaster) await sync(true);
 }
 
 async function loadConfigFromServer() {
@@ -139,16 +141,19 @@ async function sync(forceMaster, duration) {
         if(state.isMaster || forceMaster) {
             record.game = { 
                 mode: state.selectedMode, scoreRed: record.game?.scoreRed || 0, scoreBlue: record.game?.scoreBlue || 0,
-                start: forceMaster ? state.startTime : (record.game?.start || Date.now()),
+                start: forceMaster ? (state.startTime || record.game?.start || Date.now()) : (record.game?.start || Date.now()),
                 duration: duration || record.game?.duration || 30
             };
             let newObjs = [];
-            document.querySelectorAll(".obj-slot").forEach(s => {
-                if(s.querySelector(".s-active").checked) {
-                    newObjs.push({ name: s.querySelector(".s-name").value, lat: parseFloat(s.querySelector(".s-lat").value), lon: parseFloat(s.querySelector(".s-lon").value), owner: "LIBERO" });
-                }
-            });
-            record.objectives = newObjs;
+            const slots = document.querySelectorAll(".obj-slot");
+            if(slots.length > 0) {
+                slots.forEach(s => {
+                    if(s.querySelector(".s-active").checked) {
+                        newObjs.push({ name: s.querySelector(".s-name").value, lat: parseFloat(s.querySelector(".s-lat").value), lon: parseFloat(s.querySelector(".s-lon").value), owner: "LIBERO" });
+                    }
+                });
+                record.objectives = newObjs;
+            }
         }
         await fetch(URL, { method:"PUT", headers:{"Content-Type":"application/json","X-Master-Key":SECRET_KEY}, body: JSON.stringify(record)});
         updateUI(record);
