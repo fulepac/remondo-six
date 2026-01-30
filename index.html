@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SIX APP v.4.9</title>
+    <title>SIX APP v.5.0</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="stylesheet" href="style.css">
 </head>
@@ -11,10 +11,12 @@
     <div id="setup-screen">
         <header id="main-header">
             <h1 class="brand-title">SIX APP</h1>
-            <div class="credits">Creato da Fulvio v.4.9_300126</div>
+            <div class="credits">Creato da Fulvio v.5.0_300126</div>
         </header>
 
         <div id="menu">
+            <button class="btn-info" onclick="toggleTutorial(true)">📖 COME FUNZIONA? CLICCAMI !</button>
+
             <input id="playerName" placeholder="NOME OPERATORE">
             <select id="teamSelect">
                 <option value="RED">TEAM ROSSO</option>
@@ -24,7 +26,7 @@
             <div class="master-zone">
                 <input id="masterPass" type="password" placeholder="PASSWORD MASTER" oninput="checkMasterPass()">
                 <div id="masterTools" style="display:none;">
-                    <p class="m-title">MODALITÀ</p>
+                    <p class="m-title">COMANDO OPERAZIONE (MASTER)</p>
                     <div class="mode-selector">
                         <button id="btnDomination" type="button" class="mode-btn active" onclick="selectGameMode('DOMINATION')">DOMINIO</button>
                         <button id="btnRecon" type="button" class="mode-btn" onclick="selectGameMode('RECON')">RECON</button>
@@ -38,8 +40,8 @@
                     <p class="m-title">OBIETTIVI (CHECK PER ATTIVARE)</p>
                     <div id="objSlotContainer" class="slot-list"></div>
                     
-                    <button class="btn-start-master" onclick="enableSensorsAndStart(true)">🚀 SALVA E AVVIA</button>
-                    <button class="btn-danger" onclick="resetBin()">🔥 RESET TOTALE DATABASE</button>
+                    <button class="btn-start-master" onclick="enableSensorsAndStart(true)">🚀 AVVIA PER TUTTI</button>
+                    <button class="btn-danger" onclick="resetBin()">🔥 ABORTISCI E RESETTA DATABASE</button>
                 </div>
             </div>
             
@@ -47,8 +49,30 @@
         </div>
     </div>
 
+    <div id="tutorial-overlay" class="overlay" style="display:none;">
+        <div class="overlay-content">
+            <h2>🛰️ PRESENTAZIONE TATTICA</h2>
+            <div class="scroll-text">
+                <p><strong>SIX APP</strong> è un sistema di coordinamento tattico progettato da <strong>Fulvio</strong> per gestire operazioni sul campo in tempo reale.</p>
+                <hr>
+                <h3>1. ARCHITETTURA</h3>
+                <p>Il sistema sincronizza via Cloud il <strong>Comando (Master)</strong> e le <strong>Unità (Operatori)</strong>. Il Master configura obiettivi e tempi, gli Operatori eseguono.</p>
+                <h3>2. MODALITÀ</h3>
+                <p><strong>DOMINIO:</strong> Conquista punti e accumula punteggio prima dello scadere del timer.<br>
+                <strong>RECON:</strong> Infiltrazione e mappatura senza la pressione del cronometro.</p>
+                <h3>3. HUD TATTICO</h3>
+                <p><strong>Mappa Dinamica:</strong> Ruota con la tua bussola fisica.<br>
+                <strong>Navigazione:</strong> Clicca un obiettivo per vedere distanza e rotta gialla.<br>
+                <strong>Team Radar:</strong> Visualizza i tuoi compagni sulla mappa in tempo reale.</p>
+                <h3>4. SICUREZZA</h3>
+                <p>Solo il Master può abortire la missione e resettare il database globale per tutte le unità.</p>
+            </div>
+            <button class="btn-start" onclick="toggleTutorial(false)">RICEVUTO</button>
+        </div>
+    </div>
+
     <div id="game-ui" style="display:none;">
-        <button class="exit-btn" onclick="exitGame()">ESCI</button>
+        <button class="exit-btn" onclick="exitGame()">SCOLLEGATI</button>
         
         <div class="top-bar">
             <div id="timer" class="countdown-display">⏱️ --:--</div>
