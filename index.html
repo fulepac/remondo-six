@@ -8,61 +8,70 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <header id="app-header">
-        <h1>🎯 SIX APP</h1>
-        <div class="credits">Creato da Fulvio Versione 30126</div>
-        <div id="gameStatusBanner" class="status-banner">SISTEMA PRONTO</div>
-    </header>
+    <div id="setup-screen">
+        <header>
+            <h1>🎯 SIX APP</h1>
+            <div class="credits">Creato da Fulvio Versione 30126</div>
+            <div id="gameStatusBanner" class="status-banner">SISTEMA PRONTO</div>
+        </header>
 
-    <div id="menu">
-        <input id="playerName" placeholder="NOME OPERATORE">
-        <select id="teamSelect">
-            <option value="RED" id="optRed">TEAM ROSSO</option>
-            <option value="BLUE" id="optBlue">TEAM BLU</option>
-        </select>
+        <div id="menu">
+            <input id="playerName" placeholder="NOME OPERATORE">
+            <select id="teamSelect">
+                <option value="RED">TEAM ROSSO</option>
+                <option value="BLUE">TEAM BLU</option>
+            </select>
 
-        <div class="master-zone">
-            <input id="masterPass" type="password" placeholder="PASSWORD MASTER" oninput="checkMasterPass()">
-            <div id="masterTools" style="display:none;">
-                <p style="color:cyan; font-size:0.7rem; margin-bottom:5px;">MODALITÀ DI GIOCO:</p>
-                <div class="mode-selector">
-                    <button id="btnDomination" class="mode-btn active" onclick="setGameMode('DOMINATION')">DOMINIO</button>
-                    <button id="btnRecon" class="mode-btn" onclick="setGameMode('RECON')">RECON</button>
+            <div class="master-zone">
+                <input id="masterPass" type="password" placeholder="PASSWORD MASTER" oninput="checkMasterPass()">
+                <div id="masterTools" style="display:none;">
+                    <p style="color:cyan; font-size:0.7rem; margin-bottom:5px;">MODALITÀ DI GIOCO:</p>
+                    <div class="mode-selector">
+                        <button id="btnDomination" class="mode-btn active" onclick="setGameMode('DOMINATION')">DOMINIO</button>
+                        <button id="btnRecon" class="mode-btn" onclick="setGameMode('RECON')">RECON</button>
+                    </div>
+                    <div class="m-config-grid">
+                        <div class="m-row" id="rowDuration"><label>DURATA (MIN):</label><input id="gameDuration" type="number" value="30"></div>
+                        <div class="m-row"><label>CATTURA (SEC):</label><input id="captureTime" type="number" value="180"></div>
+                        <div class="m-row"><label>NOME ROSSO:</label><input id="teamRedName" type="text" value="TEAM ROSSO"></div>
+                        <div class="m-row"><label>NOME BLU:</label><input id="teamBlueName" type="text" value="TEAM BLU"></div>
+                    </div>
+                    <div id="objSlotContainer" class="slot-list"></div>
+                    <button class="btn-danger" onclick="resetBin()">🔥 RESET PARTITA</button>
                 </div>
-                
-                <div class="m-config-grid">
-                    <div class="m-row" id="rowDuration"><label>DURATA (MIN):</label><input id="gameDuration" type="number" value="30"></div>
-                    <div class="m-row"><label>CATTURA (SEC):</label><input id="captureTime" type="number" value="180"></div>
-                    <div class="m-row"><label>NOME ROSSO:</label><input id="teamRedName" type="text" value="TEAM ROSSO"></div>
-                    <div class="m-row"><label>NOME BLU:</label><input id="teamBlueName" type="text" value="TEAM BLU"></div>
-                </div>
-                <p style="color:yellow; font-size:0.7rem; margin:10px 0 5px 0;">CONFIGURA 10 OBIETTIVI:</p>
-                <div id="objSlotContainer" class="slot-list"></div>
-                <button class="btn-danger" onclick="resetBin()">🔥 RESET PARTITA</button>
             </div>
+            <button id="mainBtn" class="btn-start" onclick="enableSensorsAndStart()">▶ ENTRA IN OPERAZIONE</button>
         </div>
-        <button id="mainBtn" class="btn-start" onclick="enableSensorsAndStart()">▶ ATTIVA BUSSOLA E ENTRA</button>
     </div>
 
     <div id="game-ui" style="display:none;">
         <button class="exit-btn" onclick="exitGame()">ESCI</button>
-        <div class="top-bar" id="gameTopBar">
-            <div id="timer" class="countdown-display">⏱️ --:--</div>
-            <div class="score-display">
-                <span id="scoreRed" class="s-red">0</span> - <span id="scoreBlue" class="s-blue">0</span>
+        
+        <div id="header-stats">
+            <div class="top-bar" id="gameTopBar">
+                <div id="timer" class="countdown-display">⏱️ --:--</div>
+                <div class="score-display">
+                    <span id="scoreRed" class="s-red">0</span> - <span id="scoreBlue" class="s-blue">0</span>
+                </div>
             </div>
         </div>
         
-        <div id="nav-panel" style="display:none; background: rgba(0,0,0,0.8); border: 1px solid #fff; padding: 10px; text-align: center; margin-bottom: 5px; border-radius: 5px; z-index: 3000;">
-            <span id="nav-info" style="font-weight: bold; font-size: 1rem; color: #fff;"></span>
-            <button onclick="stopNavigation()" style="width: auto; padding: 5px 15px; margin-left: 10px; background: #ff0000; color: #fff; border: none; font-size: 0.8rem; border-radius: 4px;">ANNULLA</button>
+        <div id="nav-panel" style="display:none;">
+            <span id="nav-info"></span>
+            <button onclick="stopNavigation()" class="btn-cancel-nav">X</button>
         </div>
 
-        <div class="map-outer">
-            <div id="map-rotate"><div id="map"></div></div>
-            <div id="player-pointer">▲</div>
-            <button onclick="centerMap()" class="map-btn btn-gps">🎯</button>
-            <button onclick="reloadMap()" class="map-btn btn-reload">🔄</button>
+        <div class="map-system">
+            <div class="map-main-container">
+                <div id="map-rotate"><div id="map"></div></div>
+                <div id="player-pointer">▲</div>
+            </div>
+            <div class="map-controls-external">
+                <button onclick="centerMap()" class="ext-btn">🎯<br><small>GPS</small></button>
+                <button onclick="map.zoomIn()" class="ext-btn">➕</button>
+                <button onclick="map.zoomOut()" class="ext-btn">➖</button>
+                <button onclick="reloadMap()" class="ext-btn">🔄</button>
+            </div>
         </div>
 
         <div class="game-info-container">
@@ -71,7 +80,7 @@
                 <ul id="scoreboard" class="data-list"></ul>
             </div>
             <div class="info-section">
-                <h3 id="teamListName">👥 SQUADRA</h3>
+                <h3>👥 SQUADRA</h3>
                 <ul id="playerList" class="data-list"></ul>
             </div>
         </div>
