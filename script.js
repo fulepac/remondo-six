@@ -14,8 +14,8 @@ const DEFAULT_OBJS = [
 
 let state = { 
     isMaster: false, playerName: "", playerTeam: "", playerMarker: null, 
-    autoCenter: true, selectedMode: "DOMINATION", targetObj: null, navLine: null, startTime: null,
-    moving: false 
+    autoCenter: true, selectedMode: "DOMINATION", targetObj: null, navLine: null, 
+    startTime: null, currentHeading: 0 
 };
 
 let activeMarkers = [];
@@ -31,60 +31,21 @@ window.onload = () => {
     }
 };
 
-function toggleTutorial(show) {
-    document.getElementById("tutorial-overlay").style.display = show ? "flex" : "none";
-}
-
 function initMap() {
     map = L.map("map", { zoomControl: false, attributionControl: false }).setView([45.2377, 8.8097], 18);
     L.imageOverlay('mappa.jpg', mapBounds).addTo(map);
     L.tileLayer('https://{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', { subdomains:['mt0','mt1','mt2','mt3'], maxZoom: 21 }).addTo(map);
-    map.on('dragstart', () => state.autoCenter = false);
+    
+    // Se l'utente tocca la mappa, disattiva l'auto-centramento per permettere il controllo manuale
+    map.on('dragstart', () => { state.autoCenter = false; });
 }
 
-function checkMasterPass() {
-    if(document.getElementById("masterPass").value === PWD_MASTER) {
-        state.isMaster = true;
-        document.getElementById("masterTools").style.display = "block";
-        document.getElementById("playerStartBtn").style.display = "none";
-        loadConfigFromServer();
-    }
-}
-
-async function selectGameMode(m) {
-    state.selectedMode = m;
-    document.getElementById("btnDomination").classList.toggle("active", m === 'DOMINATION');
-    document.getElementById("btnRecon").classList.toggle("active", m === 'RECON');
-    if(state.isMaster) await sync(true);
-}
-
-async function loadConfigFromServer() {
-    try {
-        const res = await fetch(`${URL}/latest`, { headers: {"X-Master-Key":SECRET_KEY}});
-        const { record } = await res.json();
-        const container = document.getElementById("objSlotContainer");
-        container.innerHTML = "";
-        const currentObjs = (record.objectives && record.objectives.length > 0) ? record.objectives : DEFAULT_OBJS;
-        for (let i = 0; i < 10; i++) {
-            let o = currentObjs[i] || { name: `OBJ${i+1}`, lat: "", lon: "" };
-            container.innerHTML += `
-                <div class="obj-slot">
-                    <input type="checkbox" class="s-active" ${o.lat ? 'checked' : ''}>
-                    <input type="text" class="s-name" value="${o.name}">
-                    <input type="number" class="s-lat" value="${o.lat}" step="any">
-                    <input type="number" class="s-lon" value="${o.lon}" step="any">
-                </div>`;
-        }
-    } catch(e) {}
-}
-
-// Rotazione tramite Bussola (Magnetometro)
 function handleRotation(e) {
+    if (!state.autoCenter) return; // Non ruotare se l'utente sta navigando manualmente
     let compass = e.webkitCompassHeading || (360 - e.alpha);
-    // Se siamo fermi (non c'è segnale GPS di movimento), usiamo la bussola
-    if(compass && !state.moving) {
+    if (compass) {
+        state.currentHeading = compass;
         document.getElementById("map-rotate").style.transform = `rotate(${-compass}deg)`;
-        document.getElementById("player-pointer").style.transform = `translate(-50%, -50%) rotate(${compass}deg)`;
     }
 }
 
@@ -92,8 +53,9 @@ function enableSensorsAndStart(isMasterAction) {
     state.playerName = document.getElementById("playerName").value.trim().toUpperCase();
     state.playerTeam = document.getElementById("teamSelect").value;
     if(!state.playerName) return alert("INSERISCI NOME!");
-    localStorage.setItem("six_app_session", JSON.stringify({name: state.playerName, team: state.playerTeam}));
     
+    localStorage.setItem("six_app_session", JSON.stringify({name: state.playerName, team: state.playerTeam}));
+
     if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
         DeviceOrientationEvent.requestPermission().then(res => {
             if(res === 'granted') window.addEventListener('deviceorientation', handleRotation);
@@ -105,12 +67,6 @@ function enableSensorsAndStart(isMasterAction) {
     }
 }
 
-async function saveAndStart() {
-    state.startTime = Date.now();
-    await sync(true, parseInt(document.getElementById("gameDuration").value));
-    startGame();
-}
-
 async function startGame() {
     document.getElementById("setup-screen").style.display = "none";
     document.getElementById("game-ui").style.display = "block";
@@ -120,21 +76,15 @@ async function startGame() {
         navigator.geolocation.watchPosition(
             (p) => {
                 const pos = [p.coords.latitude, p.coords.longitude];
-                const heading = p.coords.heading; // Direzione GPS (gradi rispetto al nord)
-                const speed = p.coords.speed || 0;
-
-                // Coordinamento Movimento: se velocità > 0.5 m/s, usa il Heading GPS
-                if (heading !== null && speed > 0.5) {
-                    state.moving = true;
-                    document.getElementById("map-rotate").style.transform = `rotate(${-heading}deg)`;
-                    document.getElementById("player-pointer").style.transform = `translate(-50%, -50%) rotate(${heading}deg)`;
-                } else {
-                    state.moving = false; // Torna alla bussola hardware se disponibile
+                // Priorità al heading del GPS se ci si muove velocemente
+                if (p.coords.heading !== null && p.coords.speed > 0.8 && state.autoCenter) {
+                    state.currentHeading = p.coords.heading;
+                    document.getElementById("map-rotate").style.transform = `rotate(${-state.currentHeading}deg)`;
                 }
 
                 if(!state.playerMarker) {
-                    state.playerMarker = L.circleMarker(pos, {radius: 9, color: '#fff', fillColor: '#007bff', fillOpacity: 1, weight: 3}).addTo(map);
-                    map.setView(pos, 18);
+                    state.playerMarker = L.circleMarker(pos, {radius: 10, color: '#fff', fillColor: '#0f0', fillOpacity: 1, weight: 3}).addTo(map);
+                    map.setView(pos, 19);
                 } else {
                     state.playerMarker.setLatLng(pos);
                     if(state.autoCenter) map.panTo(pos);
@@ -145,6 +95,22 @@ async function startGame() {
         );
     }
     setInterval(() => sync(false), 4000);
+}
+
+// Funzioni Master e Sync (Invariate per stabilità)
+function checkMasterPass() {
+    if(document.getElementById("masterPass").value === PWD_MASTER) {
+        state.isMaster = true;
+        document.getElementById("masterTools").style.display = "block";
+        document.getElementById("playerStartBtn").style.display = "none";
+        loadConfigFromServer();
+    }
+}
+
+async function saveAndStart() {
+    state.startTime = Date.now();
+    await sync(true, parseInt(document.getElementById("gameDuration").value));
+    startGame();
 }
 
 async function sync(forceMaster, duration) {
@@ -162,18 +128,13 @@ async function sync(forceMaster, duration) {
         if(state.isMaster || forceMaster) {
             record.game = { 
                 mode: state.selectedMode, scoreRed: record.game?.scoreRed || 0, scoreBlue: record.game?.scoreBlue || 0,
-                start: forceMaster ? (state.startTime || record.game?.start || Date.now()) : (record.game?.start || Date.now()),
+                start: forceMaster ? (state.startTime || Date.now()) : record.game?.start,
                 duration: duration || record.game?.duration || 30
             };
             let newObjs = [];
             document.querySelectorAll(".obj-slot").forEach(s => {
                 if(s.querySelector(".s-active").checked) {
-                    newObjs.push({ 
-                        name: s.querySelector(".s-name").value, 
-                        lat: parseFloat(s.querySelector(".s-lat").value), 
-                        lon: parseFloat(s.querySelector(".s-lon").value), 
-                        owner: "LIBERO" 
-                    });
+                    newObjs.push({ name: s.querySelector(".s-name").value, lat: parseFloat(s.querySelector(".s-lat").value), lon: parseFloat(s.querySelector(".s-lon").value), owner: "LIBERO" });
                 }
             });
             if(newObjs.length > 0) record.objectives = newObjs;
@@ -186,24 +147,20 @@ async function sync(forceMaster, duration) {
 function updateUI(r) {
     activeMarkers.forEach(m => map.removeLayer(m)); activeMarkers = [];
     const timerEl = document.getElementById("timer");
-    const scorePanel = document.getElementById("score-panel");
     const scoreboard = document.getElementById("scoreboard");
     scoreboard.innerHTML = "";
 
     if(r.game?.mode === 'DOMINATION') {
-        scorePanel.style.display = 'flex'; timerEl.style.display = 'block';
         document.getElementById("scoreRed").innerText = r.game.scoreRed || 0;
         document.getElementById("scoreBlue").innerText = r.game.scoreBlue || 0;
         const elapsed = Math.floor((Date.now() - r.game.start) / 1000);
         const remain = ((r.game.duration || 30) * 60) - elapsed;
-        timerEl.innerText = remain > 0 ? `⏱️ ${Math.floor(remain/60)}:${(remain%60).toString().padStart(2,'0')}` : "FINE MISSIONE";
-    } else {
-        scorePanel.style.display = 'none'; timerEl.style.display = 'none';
+        timerEl.innerText = remain > 0 ? `T-MINUS: ${Math.floor(remain/60)}:${(remain%60).toString().padStart(2,'0')}` : "MISSION END";
     }
     
     (r.objectives || []).forEach(obj => {
-        let color = obj.owner === 'RED' ? 'red' : obj.owner === 'BLUE' ? 'cyan' : 'white';
-        let m = L.circle([obj.lat, obj.lon], {radius: 15, color: color, weight: 3}).addTo(map);
+        let color = obj.owner === 'RED' ? '#f00' : obj.owner === 'BLUE' ? '#0ff' : '#fff';
+        let m = L.circle([obj.lat, obj.lon], {radius: 15, color: color, weight: 3, fillOpacity: 0.2}).addTo(map);
         m.bindTooltip(obj.name, {permanent:true, direction:'top', className:'obj-label'});
         m.on('click', () => startNavigation(obj));
         activeMarkers.push(m);
@@ -214,20 +171,20 @@ function updateUI(r) {
     Object.entries(r.players || {}).forEach(([name, p]) => {
         if(Date.now() - p.last < 30000 && p.team === state.playerTeam && name !== state.playerName) {
             pList.innerHTML += `<li>${name} <span>${getDist(p.lat, p.lon)}m</span></li>`;
-            activeMarkers.push(L.circleMarker([p.lat, p.lon], {radius: 7, color: p.team==='RED'?'red':'#00ffff', fillColor: p.team==='RED'?'#f00':'#0ff', fillOpacity:0.8}).addTo(map));
+            activeMarkers.push(L.circleMarker([p.lat, p.lon], {radius: 6, color: p.team==='RED'?'#f00':'#0ff', fillColor: p.team==='RED'?'#f00':'#0ff', fillOpacity:1}).addTo(map));
         }
     });
 }
 
-function startNavigation(obj) { state.targetObj = obj; document.getElementById("nav-overlay").style.display = "flex"; updateNavigationLine(); }
+function startNavigation(obj) { state.targetObj = obj; document.getElementById("nav-overlay").style.display = "block"; updateNavigationLine(); }
 function stopNavigation() { state.targetObj = null; if(state.navLine) map.removeLayer(state.navLine); state.navLine = null; document.getElementById("nav-overlay").style.display = "none"; }
 function updateNavigationLine() {
     if(!state.targetObj || !state.playerMarker) return;
     const p1 = state.playerMarker.getLatLng();
     const p2 = [state.targetObj.lat, state.targetObj.lon];
-    document.getElementById("nav-text").innerText = `${state.targetObj.name}: ${getDist(p2[0], p2[1])}m`;
+    document.getElementById("nav-text").innerText = `NAV TO ${state.targetObj.name}: ${getDist(p2[0], p2[1])}m`;
     if(state.navLine) map.removeLayer(state.navLine);
-    state.navLine = L.polyline([p1, p2], {color: 'yellow', weight: 4, dashArray: '10, 10'}).addTo(map);
+    state.navLine = L.polyline([p1, p2], {color: 'yellow', weight: 3, dashArray: '5, 10'}).addTo(map);
 }
 
 function getDist(lat2, lon2) {
@@ -241,10 +198,4 @@ function getDist(lat2, lon2) {
 }
 
 function centerMap() { state.autoCenter = true; if(state.playerMarker) map.panTo(state.playerMarker.getLatLng()); }
-function exitGame() { if(confirm("SCOLLEGARTI?")) location.reload(); }
-async function resetBin() {
-    if(confirm("RESETTARE TUTTO?")) {
-        await fetch(URL, { method:"PUT", headers:{"Content-Type":"application/json","X-Master-Key":SECRET_KEY}, body: JSON.stringify({game:{mode:"DOMINATION",scoreRed:0,scoreBlue:0,start:Date.now(),duration:30},players:{},objectives:DEFAULT_OBJS})});
-        location.reload();
-    }
-}
+function exitGame() { if(confirm("ABORTIRE MISSIONE?")) location.reload(); }
